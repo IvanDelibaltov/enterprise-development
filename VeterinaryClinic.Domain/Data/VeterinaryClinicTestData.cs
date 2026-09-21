@@ -22,7 +22,8 @@ public static class VeterinaryClinicTestData
         new() { Id = 7, Name = "Карликовый кролик", AnimalType = AnimalType.Rabbit },
         new() { Id = 8, Name = "Баран", AnimalType = AnimalType.Rabbit },
         new() { Id = 9, Name = "Королевский питон", AnimalType = AnimalType.Reptile },
-        new() { Id = 10, Name = "Красноухая черепаха", AnimalType = AnimalType.Reptile }
+        new() { Id = 10, Name = "Красноухая черепаха", AnimalType = AnimalType.Reptile },
+        new() { Id = 11, Name = "Сирийский хомяк", AnimalType = AnimalType.Rodent }
     ];
 
     /// <summary>
@@ -66,7 +67,8 @@ public static class VeterinaryClinicTestData
         new() { Id = 17, Name = "Нора", AnimalType = AnimalType.Rabbit, Breed = Breeds[6], BirthDate = new DateTime(2023, 1, 25), Weight = 1.5m, Owner = Owners[4] },
         new() { Id = 18, Name = "Яша", AnimalType = AnimalType.Bird, Breed = Breeds[5], BirthDate = new DateTime(2021, 5, 19), Weight = 0.05m, Owner = Owners[5] },
         new() { Id = 19, Name = "Феня", AnimalType = AnimalType.Reptile, Breed = Breeds[9], BirthDate = new DateTime(2020, 7, 21), Weight = 0.9m, Owner = Owners[6] },
-        new() { Id = 20, Name = "Рокки", AnimalType = AnimalType.Dog, Breed = Breeds[1], BirthDate = new DateTime(2019, 2, 3), Weight = 32.0m, Owner = Owners[2] }
+        new() { Id = 20, Name = "Рокки", AnimalType = AnimalType.Dog, Breed = Breeds[1], BirthDate = new DateTime(2019, 2, 3), Weight = 32.0m, Owner = Owners[2] },
+        new() { Id = 21, Name = "Пуфик", AnimalType = AnimalType.Rodent, Breed = Breeds[10], BirthDate = new DateTime(2024, 2, 14), Weight = 0.12m, Owner = Owners[6] }
     ];
 
     /// <summary>
@@ -83,7 +85,8 @@ public static class VeterinaryClinicTestData
         new() { Id = 7, Name = "Дерматолог", AnimalType = AnimalType.Cat },
         new() { Id = 8, Name = "Стоматолог", AnimalType = AnimalType.Dog },
         new() { Id = 9, Name = "Офтальмолог", AnimalType = AnimalType.Bird },
-        new() { Id = 10, Name = "Диетолог", AnimalType = AnimalType.Rabbit }
+        new() { Id = 10, Name = "Диетолог", AnimalType = AnimalType.Rabbit },
+        new() { Id = 11, Name = "Родентолог", AnimalType = AnimalType.Rodent }
     ];
 
     /// <summary>
@@ -100,7 +103,8 @@ public static class VeterinaryClinicTestData
         new() { Id = 7, PassportNumber = "4010 100007", LastName = "Жданов", FirstName = "Алексей", Patronymic = "Олегович", BirthYear = 1991, Specialization = Specializations[6], ExperienceYears = 7 },
         new() { Id = 8, PassportNumber = "4010 100008", LastName = "Зимина", FirstName = "Марина", Patronymic = "Андреевна", BirthYear = 1986, Specialization = Specializations[7], ExperienceYears = 12 },
         new() { Id = 9, PassportNumber = "4010 100009", LastName = "Ильин", FirstName = "Роман", Patronymic = "Викторович", BirthYear = 1989, Specialization = Specializations[8], ExperienceYears = 9 },
-        new() { Id = 10, PassportNumber = "4010 100010", LastName = "Ковалёва", FirstName = "Екатерина", Patronymic = "Денисовна", BirthYear = 1992, Specialization = Specializations[9], ExperienceYears = 6 }
+        new() { Id = 10, PassportNumber = "4010 100010", LastName = "Ковалёва", FirstName = "Екатерина", Patronymic = "Денисовна", BirthYear = 1992, Specialization = Specializations[9], ExperienceYears = 6 },
+        new() { Id = 11, PassportNumber = "4010 100011", LastName = "Лебедева", FirstName = "Наталья", Patronymic = "Ильинична", BirthYear = 1993, Specialization = Specializations[10], ExperienceYears = 5 }
     ];
 
     /// <summary>
@@ -108,11 +112,11 @@ public static class VeterinaryClinicTestData
     /// </summary>
     public static List<Appointment> Appointments { get; } =
     [
-        new() { Id = 1, Pet = Pets[0], Veterinarian = Veterinarians[0], AppointmentDate = DateTime.Today.AddDays(-10), RoomNumber = 101, IsRepeated = false },
-        new() { Id = 2, Pet = Pets[1], Veterinarian = Veterinarians[0], AppointmentDate = DateTime.Today.AddDays(-7), RoomNumber = 101, IsRepeated = true },
+        new() { Id = 1, Pet = Pets[0], Veterinarian = Veterinarians[0], AppointmentDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 2), RoomNumber = 101, IsRepeated = false },
+        new() { Id = 2, Pet = Pets[1], Veterinarian = Veterinarians[0], AppointmentDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 5), RoomNumber = 101, IsRepeated = true },
         new() { Id = 3, Pet = Pets[10], Veterinarian = Veterinarians[0], AppointmentDate = DateTime.Today.AddDays(-5), RoomNumber = 102, IsRepeated = true },
-        new() { Id = 4, Pet = Pets[11], Veterinarian = Veterinarians[5], AppointmentDate = DateTime.Today.AddDays(-4), RoomNumber = 103, IsRepeated = false },
-        new() { Id = 5, Pet = Pets[15], Veterinarian = Veterinarians[7], AppointmentDate = DateTime.Today.AddDays(-3), RoomNumber = 101, IsRepeated = true },
+        new() { Id = 4, Pet = Pets[11], Veterinarian = Veterinarians[5], AppointmentDate = DateTime.Today.AddDays(-4), RoomNumber = 103, IsRepeated = true },
+        new() { Id = 5, Pet = Pets[15], Veterinarian = Veterinarians[7], AppointmentDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 8), RoomNumber = 101, IsRepeated = true },
         new() { Id = 6, Pet = Pets[0], Veterinarian = Veterinarians[0], AppointmentDate = DateTime.Today.AddDays(-2), RoomNumber = 104, IsRepeated = true },
         new() { Id = 7, Pet = Pets[2], Veterinarian = Veterinarians[1], AppointmentDate = DateTime.Today.AddDays(-1), RoomNumber = 201, IsRepeated = false },
         new() { Id = 8, Pet = Pets[3], Veterinarian = Veterinarians[1], AppointmentDate = DateTime.Today.AddDays(-15), RoomNumber = 201, IsRepeated = true },

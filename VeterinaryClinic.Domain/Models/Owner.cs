@@ -1,42 +1,42 @@
 namespace VeterinaryClinic.Domain.Models;
 
 /// <summary>
-/// Владелец питомцев.
+/// Владелец питомцев
 /// </summary>
 public class Owner
 {
     /// <summary>
-    /// Идентификатор владельца.
+    /// Идентификатор владельца
     /// </summary>
-    public required int Id { get; init; }
+    public required int Id { get; set; }
 
     /// <summary>
-    /// Фамилия.
+    /// Фамилия
     /// </summary>
-    public required string LastName { get; init; }
+    public required string LastName { get; set; }
 
     /// <summary>
-    /// Имя.
+    /// Имя
     /// </summary>
-    public required string FirstName { get; init; }
+    public required string FirstName { get; set; }
 
     /// <summary>
-    /// Отчество.
+    /// Отчество
     /// </summary>
-    public string? Patronymic { get; init; }
+    public string? Patronymic { get; set; }
 
     /// <summary>
-    /// Адрес.
+    /// Адрес
     /// </summary>
-    public required string Address { get; init; }
+    public required string Address { get; set; }
 
     /// <summary>
-    /// Телефон.
+    /// Телефон
     /// </summary>
-    public required string Phone { get; init; }
+    public required string Phone { get; set; }
 
     /// <summary>
-    /// Питомцы владельца.
+    /// Питомцы владельца
     /// </summary>
     public List<Pet> Pets { get; } = [];
 }

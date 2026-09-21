@@ -3,42 +3,42 @@ namespace VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Domain.Shared.Enums;
 
 /// <summary>
-/// Питомец.
+/// Питомец
 /// </summary>
 public class Pet
 {
     /// <summary>
-    /// Идентификатор питомца.
+    /// Идентификатор питомца
     /// </summary>
-    public required int Id { get; init; }
+    public required int Id { get; set; }
 
     /// <summary>
-    /// Кличка.
+    /// Кличка
     /// </summary>
-    public required string Name { get; init; }
+    public required string Name { get; set; }
 
     /// <summary>
-    /// Вид животного.
+    /// Вид животного
     /// </summary>
-    public required AnimalType AnimalType { get; init; }
+    public required AnimalType AnimalType { get; set; }
 
     /// <summary>
-    /// Порода.
+    /// Порода
     /// </summary>
-    public required Breed Breed { get; init; }
+    public required Breed Breed { get; set; }
 
     /// <summary>
-    /// Дата рождения.
+    /// Дата рождения
     /// </summary>
-    public required DateTime BirthDate { get; init; }
+    public required DateTime BirthDate { get; set; }
 
     /// <summary>
-    /// Вес в килограммах.
+    /// Вес в килограммах
     /// </summary>
-    public required decimal Weight { get; init; }
+    public required decimal Weight { get; set; }
 
     /// <summary>
-    /// Владелец.
+    /// Владелец
     /// </summary>
-    public required Owner Owner { get; init; }
+    public required Owner Owner { get; set; }
 }

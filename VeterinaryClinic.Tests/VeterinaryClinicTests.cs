@@ -4,12 +4,12 @@ using VeterinaryClinic.Domain.Data;
 using VeterinaryClinic.Domain.Shared.Enums;
 
 /// <summary>
-/// Проверки аналитических запросов ветеринарной клиники.
+/// Проверки аналитических запросов ветеринарной клиники
 /// </summary>
 public class VeterinaryClinicTests
 {
     /// <summary>
-    /// Ветеринары, специализирующиеся на выбранном виде животных.
+    /// Ветеринары, специализирующиеся на выбранном виде животных
     /// </summary>
     [Fact]
     public void GetVeterinariansByAnimalType()
@@ -33,7 +33,7 @@ public class VeterinaryClinicTests
     }
 
     /// <summary>
-    /// Питомцы, записанные на приём к указанному врачу, упорядоченные по кличке.
+    /// Питомцы, записанные на приём к указанному врачу
     /// </summary>
     [Fact]
     public void GetPetsByVeterinarian()
@@ -57,7 +57,7 @@ public class VeterinaryClinicTests
     }
 
     /// <summary>
-    /// Количество повторных приёмов выбранной породы.
+    /// Количество повторных приёмов выбранной породы
     /// </summary>
     [Fact]
     public void GetRepeatedAppointmentsByBreed()
@@ -69,11 +69,11 @@ public class VeterinaryClinicTests
                 appointment.IsRepeated &&
                 appointment.Pet.Breed.Id == breedId);
 
-        Assert.Equal(5, result);
+        Assert.Equal(6, result);
     }
 
     /// <summary>
-    /// Владельцы, имеющие более одного питомца, упорядоченные по ФИО.
+    /// Владельцы 1+ питомца
     /// </summary>
     [Fact]
     public void GetOwnersWithMoreThanOnePet()
@@ -102,7 +102,7 @@ public class VeterinaryClinicTests
     }
 
     /// <summary>
-    /// Приёмы за текущий месяц в выбранном кабинете.
+    /// Приёмы за текущий месяц в выбранном кабинете
     /// </summary>
     [Fact]
     public void GetAppointmentsForCurrentMonthByRoom()

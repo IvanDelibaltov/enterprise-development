@@ -1,47 +1,47 @@
 namespace VeterinaryClinic.Domain.Models;
 
 /// <summary>
-/// Ветеринар.
+/// Ветеринар
 /// </summary>
 public class Veterinarian
 {
     /// <summary>
-    /// Идентификатор ветеринара.
+    /// Идентификатор ветеринара
     /// </summary>
-    public required int Id { get; init; }
+    public required int Id { get; set; }
 
     /// <summary>
-    /// Номер паспорта.
+    /// Номер паспорта
     /// </summary>
-    public required string PassportNumber { get; init; }
+    public required string PassportNumber { get; set; }
 
     /// <summary>
-    /// Фамилия.
+    /// Фамилия
     /// </summary>
-    public required string LastName { get; init; }
+    public required string LastName { get; set; }
 
     /// <summary>
-    /// Имя.
+    /// Имя
     /// </summary>
-    public required string FirstName { get; init; }
+    public required string FirstName { get; set; }
 
     /// <summary>
-    /// Отчество.
+    /// Отчество
     /// </summary>
-    public string? Patronymic { get; init; }
+    public string? Patronymic { get; set; }
 
     /// <summary>
-    /// Год рождения.
+    /// Год рождения
     /// </summary>
-    public required int BirthYear { get; init; }
+    public required int BirthYear { get; set; }
 
     /// <summary>
-    /// Специализация.
+    /// Специализация
     /// </summary>
-    public required Specialization Specialization { get; init; }
+    public required Specialization Specialization { get; set; }
 
     /// <summary>
-    /// Стаж работы в годах.
+    /// Стаж работы в годах
     /// </summary>
-    public required int ExperienceYears { get; init; }
+    public required int ExperienceYears { get; set; }
 }

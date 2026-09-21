@@ -3,22 +3,22 @@ namespace VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Domain.Shared.Enums;
 
 /// <summary>
-/// Порода животного.
+/// Порода животного
 /// </summary>
 public class Breed
 {
     /// <summary>
-    /// Идентификатор породы.
+    /// Идентификатор породы
     /// </summary>
-    public required int Id { get; init; }
+    public required int Id { get; set; }
 
     /// <summary>
-    /// Название породы.
+    /// Название породы
     /// </summary>
-    public required string Name { get; init; }
+    public required string Name { get; set; }
 
     /// <summary>
-    /// Вид животного.
+    /// Вид животного
     /// </summary>
-    public required AnimalType AnimalType { get; init; }
+    public required AnimalType AnimalType { get; set; }
 }

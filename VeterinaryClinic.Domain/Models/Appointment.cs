@@ -1,37 +1,37 @@
 namespace VeterinaryClinic.Domain.Models;
 
 /// <summary>
-/// Запись питомца на приём к ветеринару.
+/// Запись питомца на приём к ветеринару
 /// </summary>
 public class Appointment
 {
     /// <summary>
-    /// Идентификатор записи.
+    /// Идентификатор записи
     /// </summary>
-    public required int Id { get; init; }
+    public required int Id { get; set; }
 
     /// <summary>
-    /// Питомец.
+    /// Питомец
     /// </summary>
-    public required Pet Pet { get; init; }
+    public required Pet Pet { get; set; }
 
     /// <summary>
-    /// Ветеринар.
+    /// Ветеринар
     /// </summary>
-    public required Veterinarian Veterinarian { get; init; }
+    public required Veterinarian Veterinarian { get; set; }
 
     /// <summary>
-    /// Дата и время приёма.
+    /// Дата и время приёма
     /// </summary>
-    public required DateTime AppointmentDate { get; init; }
+    public required DateTime AppointmentDate { get; set; }
 
     /// <summary>
-    /// Номер кабинета.
+    /// Номер кабинета
     /// </summary>
-    public required int RoomNumber { get; init; }
+    public required int RoomNumber { get; set; }
 
     /// <summary>
-    /// Признак повторного приёма.
+    /// Признак повторного приёма
     /// </summary>
-    public required bool IsRepeated { get; init; }
+    public required bool IsRepeated { get; set; }
 }

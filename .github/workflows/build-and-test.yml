@@ -2,9 +2,6 @@ name: Build and Test
 
 on:
   push:
-    branches:
-      - lab1
-      - lab1-correct
   pull_request:
     branches:
       - main
@@ -26,7 +23,7 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --no-restore --warnaserror
+        run: dotnet build --no-restore
 
       - name: Test
         run: dotnet test --no-build

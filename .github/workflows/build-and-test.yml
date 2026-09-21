@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - lab1
+      - lab1-correct
   pull_request:
     branches:
       - main

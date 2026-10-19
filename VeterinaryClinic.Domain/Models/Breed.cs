@@ -1,6 +1,6 @@
-namespace VeterinaryClinic.Domain.Models;
-
 using VeterinaryClinic.Domain.Shared.Enums;
+
+namespace VeterinaryClinic.Domain.Models;
 
 /// <summary>
 /// Порода животного
@@ -10,15 +10,15 @@ public class Breed
     /// <summary>
     /// Идентификатор породы
     /// </summary>
-    public required int Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Название породы
     /// </summary>
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Вид животного
     /// </summary>
-    public required AnimalType AnimalType { get; set; }
+    public AnimalType AnimalType { get; set; }
 }

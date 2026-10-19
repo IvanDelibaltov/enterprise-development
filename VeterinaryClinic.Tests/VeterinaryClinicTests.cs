@@ -1,79 +1,103 @@
-namespace VeterinaryClinic.Tests;
-
 using VeterinaryClinic.Domain.Data;
 using VeterinaryClinic.Domain.Shared.Enums;
+
+namespace VeterinaryClinic.Tests;
 
 /// <summary>
 /// Проверки аналитических запросов ветеринарной клиники
 /// </summary>
 public class VeterinaryClinicTests
 {
+    public static IEnumerable<object[]> VeterinarianCases =>
+    [
+        [1, new[] { 2, 11, 1 }],
+        [2, new[] { 3, 4 }],
+        [3, new[] { 5, 6 }],
+        [4, new[] { 17, 8, 7 }],
+        [5, new[] { 9, 10, 19 }],
+        [6, new[] { 13, 12, 20 }],
+        [7, new[] { 14, 15 }],
+        [8, new[] { 16 }],
+        [9, new[] { 18 }],
+        [10, Array.Empty<int>()],
+        [11, Array.Empty<int>()]
+    ];
+
+    public static IEnumerable<object[]> BreedCases =>
+    [
+        [1, 6],
+        [2, 2],
+        [3, 0],
+        [4, 2],
+        [5, 0],
+        [6, 1],
+        [7, 0],
+        [8, 1],
+        [9, 0],
+        [10, 2],
+        [11, 0]
+    ];
+
     /// <summary>
     /// Ветеринары, специализирующиеся на выбранном виде животных
     /// </summary>
-    [Fact]
-    public void GetVeterinariansByAnimalType()
+    [Theory]
+    [InlineData(AnimalType.Dog, new int[] { 1, 6, 8 })]
+    [InlineData(AnimalType.Cat, new int[] { 2, 7 })]
+    [InlineData(AnimalType.Bird, new int[] { 3, 9 })]
+    [InlineData(AnimalType.Rabbit, new int[] { 4 })]
+    [InlineData(AnimalType.Reptile, new int[] { 5 })]
+    [InlineData(AnimalType.Rodent, new int[] { 10, 11 })]
+    public void GetVeterinariansByAnimalType(AnimalType animalType, int[] expectedIds)
     {
-        var animalType = AnimalType.Dog;
-
         var result = VeterinaryClinicTestData.Veterinarians
             .Where(veterinarian => veterinarian.Specialization.AnimalType == animalType)
             .OrderBy(veterinarian => veterinarian.LastName)
             .ThenBy(veterinarian => veterinarian.FirstName)
+            .Select(veterinarian => veterinarian.Id)
             .ToArray();
 
-        var expected = new[]
-        {
-            "Андреев",
-            "Ефремова",
-            "Зимина"
-        };
-
-        Assert.Equal(expected, result.Select(veterinarian => veterinarian.LastName).ToArray());
+        Assert.Equal(expectedIds, result);
     }
 
     /// <summary>
-    /// Питомцы, записанные на приём к указанному врачу
+    /// Питомцы, записанные на приём к указанному врачу, упорядоченные по кличке
     /// </summary>
-    [Fact]
-    public void GetPetsByVeterinarian()
+    [Theory]
+    [MemberData(nameof(VeterinarianCases))]
+    public void GetPetsByVeterinarian(int veterinarianId, int[] expectedPetIds)
     {
-        var veterinarianId = 1;
+        var veterinarian = VeterinaryClinicTestData.Veterinarians
+            .Single(vet => vet.Id == veterinarianId);
 
         var result = VeterinaryClinicTestData.Appointments
-            .Where(appointment => appointment.Veterinarian.Id == veterinarianId)
+            .Where(appointment => appointment.Veterinarian.Id == veterinarian.Id)
             .Select(appointment => appointment.Pet)
             .DistinctBy(pet => pet.Id)
             .OrderBy(pet => pet.Name)
+            .Select(pet => pet.Id)
             .ToArray();
 
-       var expected = new[]
-{
-    "Альма",
-    "Арчи",
-    "Бим"
-};
-        Assert.Equal(expected, result.Select(pet => pet.Name).ToArray());
+        Assert.Equal(expectedPetIds, result);
     }
 
     /// <summary>
-    /// Количество повторных приёмов выбранной породы
+    /// Количество повторных приёмов для каждой породы из справочника
     /// </summary>
-    [Fact]
-    public void GetRepeatedAppointmentsByBreed()
+    [Theory]
+    [MemberData(nameof(BreedCases))]
+    public void GetRepeatedAppointmentsByBreed(int breedId, int expectedCount)
     {
-        var breedId = 1;
+        var breed = VeterinaryClinicTestData.Breeds.Single(item => item.Id == breedId);
 
         var result = VeterinaryClinicTestData.Appointments
-            .Count(appointment =>
-                appointment.IsRepeated &&
-                appointment.Pet.Breed.Id == breedId);
+            .Count(appointment => appointment.IsRepeated && appointment.Pet.Breed.Id == breed.Id);
 
-        Assert.Equal(6, result);
+        Assert.Equal(expectedCount, result);
     }
 
     /// <summary>
-    /// Владельцы 1+ питомца
+    /// Владельцы, имеющие более одного питомца, упорядоченные по ФИО
     /// </summary>
     [Fact]
     public void GetOwnersWithMoreThanOnePet()
@@ -83,22 +107,12 @@ public class VeterinaryClinicTests
             .OrderBy(owner => owner.LastName)
             .ThenBy(owner => owner.FirstName)
             .ThenBy(owner => owner.Patronymic)
+            .Select(owner => owner.Id)
             .ToArray();
 
-        var expected = new[]
-        {
-            "Алексеев",
-            "Беляева",
-            "Васильев",
-            "Громова",
-            "Дорофеев",
-            "Ершова",
-            "Жуков",
-            "Иванов",
-            "Крылова"
-        };
+        var expectedIds = new[] { 1, 2, 3, 4, 5, 6, 7, 9, 10 };
 
-        Assert.Equal(expected, result.Select(owner => owner.LastName).ToArray());
+        Assert.Equal(expectedIds, result);
     }
 
     /// <summary>
@@ -107,23 +121,17 @@ public class VeterinaryClinicTests
     [Fact]
     public void GetAppointmentsForCurrentMonthByRoom()
     {
-        var roomNumber = 101;
-        var today = DateTime.Today;
-        var monthStart = new DateTime(today.Year, today.Month, 1);
-        var nextMonthStart = monthStart.AddMonths(1);
-
         var result = VeterinaryClinicTestData.Appointments
             .Where(appointment =>
-                appointment.RoomNumber == roomNumber &&
-                appointment.AppointmentDate >= monthStart &&
-                appointment.AppointmentDate < nextMonthStart)
+                appointment.RoomNumber == 101 &&
+                appointment.AppointmentDate.Month == DateTime.Today.Month &&
+                appointment.AppointmentDate.Year == DateTime.Today.Year)
             .OrderBy(appointment => appointment.AppointmentDate)
+            .Select(appointment => appointment.Id)
             .ToArray();
 
-        Assert.Equal(3, result.Length);
-        Assert.All(result, appointment => Assert.Equal(roomNumber, appointment.RoomNumber));
-        Assert.All(result, appointment => Assert.True(
-            appointment.AppointmentDate >= monthStart &&
-            appointment.AppointmentDate < nextMonthStart));
+        var expectedIds = new[] { 1, 2, 5 };
+
+        Assert.Equal(expectedIds, result);
     }
 }

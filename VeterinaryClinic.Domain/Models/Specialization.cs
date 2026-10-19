@@ -1,6 +1,6 @@
-namespace VeterinaryClinic.Domain.Models;
-
 using VeterinaryClinic.Domain.Shared.Enums;
+
+namespace VeterinaryClinic.Domain.Models;
 
 /// <summary>
 /// Специализация ветеринара
@@ -10,15 +10,15 @@ public class Specialization
     /// <summary>
     /// Идентификатор специализации
     /// </summary>
-    public required int Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Название специализации
     /// </summary>
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Основной вид животных, с которым работает специалист
     /// </summary>
-    public required AnimalType AnimalType { get; set; }
+    public AnimalType AnimalType { get; set; }
 }

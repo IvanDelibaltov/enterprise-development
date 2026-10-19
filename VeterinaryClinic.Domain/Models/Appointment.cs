@@ -8,30 +8,30 @@ public class Appointment
     /// <summary>
     /// Идентификатор записи
     /// </summary>
-    public required int Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Питомец
     /// </summary>
-    public required Pet Pet { get; set; }
+    public Pet Pet { get; set; } = null!;
 
     /// <summary>
     /// Ветеринар
     /// </summary>
-    public required Veterinarian Veterinarian { get; set; }
+    public Veterinarian Veterinarian { get; set; } = null!;
 
     /// <summary>
     /// Дата и время приёма
     /// </summary>
-    public required DateTime AppointmentDate { get; set; }
+    public DateTime AppointmentDate { get; set; }
 
     /// <summary>
     /// Номер кабинета
     /// </summary>
-    public required int RoomNumber { get; set; }
+    public int RoomNumber { get; set; }
 
     /// <summary>
     /// Признак повторного приёма
     /// </summary>
-    public required bool IsRepeated { get; set; }
+    public bool IsRepeated { get; set; }
 }

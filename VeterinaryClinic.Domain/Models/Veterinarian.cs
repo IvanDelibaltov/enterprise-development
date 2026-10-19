@@ -3,45 +3,30 @@ namespace VeterinaryClinic.Domain.Models;
 /// <summary>
 /// Ветеринар
 /// </summary>
-public class Veterinarian
+public class Veterinarian : Person
 {
     /// <summary>
     /// Идентификатор ветеринара
     /// </summary>
-    public required int Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Номер паспорта
     /// </summary>
-    public required string PassportNumber { get; set; }
+    public string PassportNumber { get; set; } = string.Empty;
 
     /// <summary>
-    /// Фамилия
+    /// Дата рождения
     /// </summary>
-    public required string LastName { get; set; }
-
-    /// <summary>
-    /// Имя
-    /// </summary>
-    public required string FirstName { get; set; }
-
-    /// <summary>
-    /// Отчество
-    /// </summary>
-    public string? Patronymic { get; set; }
-
-    /// <summary>
-    /// Год рождения
-    /// </summary>
-    public required int BirthYear { get; set; }
+    public DateOnly BirthDate { get; set; }
 
     /// <summary>
     /// Специализация
     /// </summary>
-    public required Specialization Specialization { get; set; }
+    public Specialization Specialization { get; set; } = null!;
 
     /// <summary>
     /// Стаж работы в годах
     /// </summary>
-    public required int ExperienceYears { get; set; }
+    public int ExperienceYears { get; set; }
 }

@@ -5,9 +5,18 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Application.Services;
 
+/// <summary>
+/// Реализует операции с специализациями ветеринаров
+/// </summary>
 public sealed class SpecializationService(IRepository<Specialization> specializations, IRepository<Veterinarian> veterinarians)
 {
+    /// <summary>
+    /// Возвращает все специализации
+    /// </summary>
     public IReadOnlyList<SpecializationDto> Specializations() => specializations.GetAll().Select(DtoMapper.Map).ToArray();
+    /// <summary>
+    /// Создаёт или обновляет специализацию ветеринара
+    /// </summary>
     public SpecializationDto Save(int? id, SaveSpecializationRequest x)
     {
         if (string.IsNullOrWhiteSpace(x.Name) || !Enum.IsDefined(x.AnimalType)) throw new ArgumentException("Invalid specialization");

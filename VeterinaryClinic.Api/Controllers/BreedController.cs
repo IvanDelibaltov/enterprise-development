@@ -4,14 +4,23 @@ using VeterinaryClinic.Application.Services;
 
 namespace VeterinaryClinic.Api.Controllers;
 
+/// <summary>
+/// Предоставляет HTTP-операции для работы с породами животных
+/// </summary>
 [ApiController]
 [Route("api/breeds")]
 public sealed class BreedController(BreedService clinic) : ControllerBase
 {
+    /// <summary>
+    /// Возвращает все породы животных
+    /// </summary>
     [HttpGet]
     [EndpointSummary("Get all breeds")]
     [ProducesResponseType(typeof(IReadOnlyList<BreedDto>), StatusCodes.Status200OK)]
     public ActionResult<IReadOnlyList<BreedDto>> GetAll() => Ok(clinic.Breeds());
+    /// <summary>
+    /// Возвращает породу животного по идентификатору
+    /// </summary>
     [HttpGet("{id:int}")]
     [EndpointSummary("Get breed by ID")]
     [ProducesResponseType(typeof(BreedDto), StatusCodes.Status200OK)]
@@ -21,6 +30,9 @@ public sealed class BreedController(BreedService clinic) : ControllerBase
         var entity = clinic.Breeds().FirstOrDefault(x => x.Id == id);
         return entity is null ? NotFound() : Ok(entity);
     }
+    /// <summary>
+    /// Создаёт новую породу животного
+    /// </summary>
     [HttpPost]
     [EndpointSummary("Create breed")]
     [ProducesResponseType(typeof(BreedDto), StatusCodes.Status201Created)]
@@ -30,12 +42,18 @@ public sealed class BreedController(BreedService clinic) : ControllerBase
         var entity = clinic.Save((int?)null, request);
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
+    /// <summary>
+    /// Обновляет породу животного по идентификатору
+    /// </summary>
     [HttpPut("{id:int}")]
     [EndpointSummary("Update breed")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BreedDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<BreedDto> Update(int id, SaveBreedRequest request) => Ok(clinic.Save((int?)id, request));
+    /// <summary>
+    /// Удаляет породу животного по идентификатору
+    /// </summary>
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete breed")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -46,6 +64,9 @@ public sealed class BreedController(BreedService clinic) : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Возвращает количество повторных приёмов для породы
+    /// </summary>
     [HttpGet("{id:int}/repeated-appointments/count")]
     [EndpointSummary("Count repeated appointments by breed")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]

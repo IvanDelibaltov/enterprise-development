@@ -4,14 +4,23 @@ using VeterinaryClinic.Application.Services;
 
 namespace VeterinaryClinic.Api.Controllers;
 
+/// <summary>
+/// Предоставляет HTTP-операции для работы со специализациями ветеринаров
+/// </summary>
 [ApiController]
 [Route("api/specializations")]
 public sealed class SpecializationController(SpecializationService clinic) : ControllerBase
 {
+    /// <summary>
+    /// Возвращает все специализации ветеринаров
+    /// </summary>
     [HttpGet]
     [EndpointSummary("Get all specializations")]
     [ProducesResponseType(typeof(IReadOnlyList<SpecializationDto>), StatusCodes.Status200OK)]
     public ActionResult<IReadOnlyList<SpecializationDto>> GetAll() => Ok(clinic.Specializations());
+    /// <summary>
+    /// Возвращает специализацию ветеринара по идентификатору
+    /// </summary>
     [HttpGet("{id:int}")]
     [EndpointSummary("Get specialization by ID")]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status200OK)]
@@ -21,6 +30,9 @@ public sealed class SpecializationController(SpecializationService clinic) : Con
         var entity = clinic.Specializations().FirstOrDefault(x => x.Id == id);
         return entity is null ? NotFound() : Ok(entity);
     }
+    /// <summary>
+    /// Создаёт новую специализацию ветеринара
+    /// </summary>
     [HttpPost]
     [EndpointSummary("Create specialization")]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status201Created)]
@@ -30,12 +42,18 @@ public sealed class SpecializationController(SpecializationService clinic) : Con
         var entity = clinic.Save((int?)null, request);
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
+    /// <summary>
+    /// Обновляет специализацию ветеринара по идентификатору
+    /// </summary>
     [HttpPut("{id:int}")]
     [EndpointSummary("Update specialization")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<SpecializationDto> Update(int id, SaveSpecializationRequest request) => Ok(clinic.Save((int?)id, request));
+    /// <summary>
+    /// Удаляет специализацию ветеринара по идентификатору
+    /// </summary>
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete specialization")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]

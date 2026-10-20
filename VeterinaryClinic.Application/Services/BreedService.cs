@@ -5,11 +5,20 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Application.Services;
 
+/// <summary>
+/// Реализует операции с породами животных
+/// </summary>
 public sealed class BreedService(IRepository<Breed> breeds, IRepository<Pet> pets, IRepository<Appointment> appointments)
 {
+    /// <summary>
+    /// Возвращает все породы
+    /// </summary>
     public IReadOnlyList<BreedDto> Breeds() => breeds.GetAll().Select(DtoMapper.Map).ToArray();
     public int RepeatedAppointments(int breedId) => appointments.GetAll()
         .Count(x => x.IsRepeated && x.Pet.Breed.Id == breedId);
+    /// <summary>
+    /// Создаёт или обновляет породу животного
+    /// </summary>
     public BreedDto Save(int? id, SaveBreedRequest x)
     {
         if (string.IsNullOrWhiteSpace(x.Name) || !Enum.IsDefined(x.AnimalType)) throw new ArgumentException("Invalid breed");

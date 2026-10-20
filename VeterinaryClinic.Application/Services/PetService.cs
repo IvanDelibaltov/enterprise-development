@@ -5,9 +5,18 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Application.Services;
 
+/// <summary>
+/// Реализует операции с питомцами
+/// </summary>
 public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds, IRepository<Owner> owners, IRepository<Appointment> appointments)
 {
+    /// <summary>
+    /// Возвращает всех питомцев
+    /// </summary>
     public IReadOnlyList<PetDto> Pets() => pets.GetAll().Select(DtoMapper.Map).ToArray();
+    /// <summary>
+    /// Создаёт или обновляет питомца
+    /// </summary>
     public PetDto Save(int? id, SavePetRequest x)
     {
         var breed = breeds.Get(x.BreedId) ?? throw new ArgumentException("Breed not found");
@@ -29,6 +38,9 @@ public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds,
         if (!id.HasValue) pets.Add(e);
         return DtoMapper.Map(e);
     }
+    /// <summary>
+    /// Удаляет питомца и очищает связь с владельцем
+    /// </summary>
     public void DeletePet(int id)
     {
         var pet = pets.Get(id);

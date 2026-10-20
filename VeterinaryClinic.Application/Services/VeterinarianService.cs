@@ -5,14 +5,23 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Application.Services;
 
+/// <summary>
+/// Реализует операции с ветеринарными врачами
+/// </summary>
 public sealed class VeterinarianService(IRepository<Veterinarian> veterinarians, IRepository<Specialization> specializations, IRepository<Appointment> appointments)
 {
+    /// <summary>
+    /// Возвращает всех ветеринаров
+    /// </summary>
     public IReadOnlyList<VeterinarianDto> Veterinarians() => veterinarians.GetAll().Select(DtoMapper.Map).ToArray();
     public IReadOnlyList<VeterinarianDto> VeterinariansBySpecies(AnimalType species) => veterinarians.GetAll()
         .Where(x => x.Specialization.AnimalType == species).Select(DtoMapper.Map).ToArray();
     public IReadOnlyList<PetDto> PetsByVeterinarian(int id) => appointments.GetAll()
         .Where(x => x.Veterinarian.Id == id).Select(x => x.Pet).DistinctBy(x => x.Id)
         .OrderBy(x => x.Name).Select(DtoMapper.Map).ToArray();
+    /// <summary>
+    /// Создаёт или обновляет ветеринарного врача
+    /// </summary>
     public VeterinarianDto Save(int? id, SaveVeterinarianRequest x)
     {
         var spec = specializations.Get(x.SpecializationId) ?? throw new ArgumentException("Specialization not found");

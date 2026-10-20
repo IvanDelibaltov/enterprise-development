@@ -1,6 +1,9 @@
 using VeterinaryClinic.Application.Repositories;
 namespace VeterinaryClinic.Infrastructure;
 
+/// <summary>
+/// Хранит сущности в памяти приложения
+/// </summary>
 public sealed class InMemoryRepository<T>(IEnumerable<T> initial, Func<T, int> idSelector) : IRepository<T> where T : class
 {
     private readonly List<T> _items = initial.ToList();

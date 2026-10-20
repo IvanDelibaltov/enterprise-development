@@ -5,14 +5,23 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Application.Services;
 
+/// <summary>
+/// Реализует операции с записями на приём
+/// </summary>
 public sealed class AppointmentService(IRepository<Appointment> appointments, IRepository<Pet> pets, IRepository<Veterinarian> veterinarians)
 {
+    /// <summary>
+    /// Возвращает все записи на приём
+    /// </summary>
     public IReadOnlyList<AppointmentDto> Appointments() => appointments.GetAll().Select(DtoMapper.Map).ToArray();
 
     public IReadOnlyList<AppointmentDto> AppointmentsThisMonth(int room, DateTime today) => appointments.GetAll()
         .Where(x => x.RoomNumber == room && x.AppointmentDate.Year == today.Year && x.AppointmentDate.Month == today.Month)
         .OrderBy(x => x.AppointmentDate).Select(DtoMapper.Map).ToArray();
 
+    /// <summary>
+    /// Создаёт или обновляет запись на приём
+    /// </summary>
     public AppointmentDto Save(int? id, SaveAppointmentRequest x)
     {
         var pet = pets.Get(x.PetId) ?? throw new ArgumentException("Pet not found");

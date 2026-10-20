@@ -4,8 +4,14 @@ using VeterinaryClinic.Domain.Data;
 using VeterinaryClinic.Domain.Models;
 namespace VeterinaryClinic.Infrastructure;
 
+/// <summary>
+/// Регистрирует репозитории и начальные данные клиники
+/// </summary>
 public static class ServiceRegistration
 {
+    /// <summary>
+    /// Добавляет репозитории клиники в контейнер зависимостей
+    /// </summary>
     public static IServiceCollection AddClinicRepositories(this IServiceCollection services)
     {
         services.AddSingleton<IRepository<Breed>>(new InMemoryRepository<Breed>(VeterinaryClinicTestData.Breeds.Select(x => new Breed { Id = x.Id, Name = x.Name, AnimalType = x.AnimalType }), x => x.Id));

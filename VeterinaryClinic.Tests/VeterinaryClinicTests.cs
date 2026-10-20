@@ -3,9 +3,6 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Tests;
 
-/// <summary>
-/// Проверки аналитических запросов ветеринарной клиники
-/// </summary>
 public class VeterinaryClinicTests
 {
     public static IEnumerable<object[]> VeterinarianCases =>
@@ -37,10 +34,6 @@ public class VeterinaryClinicTests
         [10, 2],
         [11, 0]
     ];
-
-    /// <summary>
-    /// Ветеринары, специализирующиеся на выбранном виде животных
-    /// </summary>
     [Theory]
     [InlineData(AnimalType.Dog, new int[] { 1, 6, 8 })]
     [InlineData(AnimalType.Cat, new int[] { 2, 7 })]
@@ -59,10 +52,6 @@ public class VeterinaryClinicTests
 
         Assert.Equal(expectedIds, result);
     }
-
-    /// <summary>
-    /// Питомцы, записанные на приём к указанному врачу, упорядоченные по кличке
-    /// </summary>
     [Theory]
     [MemberData(nameof(VeterinarianCases))]
     public void GetPetsByVeterinarian(int veterinarianId, int[] expectedPetIds)
@@ -80,10 +69,6 @@ public class VeterinaryClinicTests
 
         Assert.Equal(expectedPetIds, result);
     }
-
-    /// <summary>
-    /// Количество повторных приёмов для каждой породы из справочника
-    /// </summary>
     [Theory]
     [MemberData(nameof(BreedCases))]
     public void GetRepeatedAppointmentsByBreed(int breedId, int expectedCount)
@@ -95,10 +80,6 @@ public class VeterinaryClinicTests
 
         Assert.Equal(expectedCount, result);
     }
-
-    /// <summary>
-    /// Владельцы, имеющие более одного питомца, упорядоченные по ФИО
-    /// </summary>
     [Fact]
     public void GetOwnersWithMoreThanOnePet()
     {
@@ -114,10 +95,6 @@ public class VeterinaryClinicTests
 
         Assert.Equal(expectedIds, result);
     }
-
-    /// <summary>
-    /// Приёмы за текущий месяц в выбранном кабинете
-    /// </summary>
     [Fact]
     public void GetAppointmentsForCurrentMonthByRoom()
     {

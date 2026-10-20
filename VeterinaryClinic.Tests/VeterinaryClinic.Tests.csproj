@@ -18,5 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VeterinaryClinic.Domain\VeterinaryClinic.Domain.csproj" />
+    <ProjectReference Include="..\VeterinaryClinic.Application\VeterinaryClinic.Application.csproj" />
+    <ProjectReference Include="..\VeterinaryClinic.Infrastructure\VeterinaryClinic.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

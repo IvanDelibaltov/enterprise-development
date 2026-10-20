@@ -1,7 +1,6 @@
 namespace VeterinaryClinic.Domain.Models;
-
 /// <summary>
-/// Общие данные человека
+/// Общие сведения о человеке
 /// </summary>
 public abstract class Person
 {
@@ -9,19 +8,16 @@ public abstract class Person
     /// Фамилия
     /// </summary>
     public string LastName { get; set; } = string.Empty;
-
     /// <summary>
     /// Имя
     /// </summary>
     public string FirstName { get; set; } = string.Empty;
-
     /// <summary>
-    /// Отчество
+    /// Отчество, если имеется
     /// </summary>
     public string? Patronymic { get; set; }
-
     /// <summary>
-    /// Телефон
+    /// Контактный телефон
     /// </summary>
     public string Phone { get; set; } = string.Empty;
 }

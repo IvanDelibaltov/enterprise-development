@@ -1,7 +1,6 @@
 namespace VeterinaryClinic.Domain.Models;
-
 /// <summary>
-/// Питомец
+/// Питомец, зарегистрированный в клинике
 /// </summary>
 public class Pet
 {
@@ -9,27 +8,22 @@ public class Pet
     /// Идентификатор питомца
     /// </summary>
     public int Id { get; set; }
-
     /// <summary>
-    /// Кличка
+    /// Кличка питомца
     /// </summary>
     public string Name { get; set; } = string.Empty;
-
     /// <summary>
-    /// Порода, определяющая вид животного
+    /// Порода; по ней определяется вид животного
     /// </summary>
     public Breed Breed { get; set; } = null!;
-
     /// <summary>
-    /// Дата рождения
+    /// Дата рождения без времени
     /// </summary>
     public DateOnly BirthDate { get; set; }
-
     /// <summary>
     /// Вес в килограммах
     /// </summary>
     public double Weight { get; set; }
-
     /// <summary>
     /// Владелец, если он известен
     /// </summary>

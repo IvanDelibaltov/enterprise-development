@@ -3,14 +3,8 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Domain.Data;
 
-/// <summary>
-/// Тестовые данные ветеринарной клиники
-/// </summary>
 public static class VeterinaryClinicTestData
 {
-    /// <summary>
-    /// Список пород
-    /// </summary>
     public static IReadOnlyList<Breed> Breeds { get; } = Array.AsReadOnly(new Breed[]
     {
         new() { Id = 1, Name = "Лабрадор", AnimalType = AnimalType.Dog },
@@ -25,10 +19,6 @@ public static class VeterinaryClinicTestData
         new() { Id = 10, Name = "Красноухая черепаха", AnimalType = AnimalType.Reptile },
         new() { Id = 11, Name = "Сирийский хомяк", AnimalType = AnimalType.Rodent }
     });
-
-    /// <summary>
-    /// Список владельцев
-    /// </summary>
     public static IReadOnlyList<Owner> Owners { get; } = Array.AsReadOnly(new Owner[]
     {
         new() { Id = 1, LastName = "Алексеев", FirstName = "Антон", Patronymic = "Игоревич", Address = "ул. Лесная, 12", Phone = "+79990000001" },
@@ -42,10 +32,6 @@ public static class VeterinaryClinicTestData
         new() { Id = 9, LastName = "Иванов", FirstName = "Пётр", Patronymic = "Алексеевич", Address = "ул. Заречная, 7", Phone = "+79990000009" },
         new() { Id = 10, LastName = "Крылова", FirstName = "Наталья", Patronymic = "Михайловна", Address = "ул. Речная, 10", Phone = "+79990000010" }
     });
-
-    /// <summary>
-    /// Список питомцев
-    /// </summary>
     public static IReadOnlyList<Pet> Pets { get; } = Array.AsReadOnly(new Pet[]
     {
         new() { Id = 1, Name = "Бим", Breed = Breeds[0], BirthDate = new DateOnly(2020, 3, 12), Weight = 28.5, Owner = Owners[0] },
@@ -70,10 +56,6 @@ public static class VeterinaryClinicTestData
         new() { Id = 20, Name = "Рокки", Breed = Breeds[1], BirthDate = new DateOnly(2019, 2, 3), Weight = 32.0, Owner = Owners[2] },
         new() { Id = 21, Name = "Пуфик", Breed = Breeds[10], BirthDate = new DateOnly(2024, 2, 14), Weight = 0.12, Owner = Owners[6] }
     });
-
-    /// <summary>
-    /// Список специализаций
-    /// </summary>
     public static IReadOnlyList<Specialization> Specializations { get; } = Array.AsReadOnly(new Specialization[]
     {
         new() { Id = 1, Name = "Терапевт", AnimalType = AnimalType.Dog },
@@ -88,10 +70,6 @@ public static class VeterinaryClinicTestData
         new() { Id = 10, Name = "Ратолог", AnimalType = AnimalType.Rodent },
         new() { Id = 11, Name = "Экзотолог", AnimalType = AnimalType.Rodent }
     });
-
-    /// <summary>
-    /// Список ветеринаров
-    /// </summary>
     public static IReadOnlyList<Veterinarian> Veterinarians { get; } = Array.AsReadOnly(new Veterinarian[]
     {
         new() { Id = 1, PassportNumber = "4010 100001", Phone = "+7999111001", LastName = "Андреев", FirstName = "Иван", Patronymic = "Сергеевич", BirthDate = new DateOnly(1985, 4, 12), Specialization = Specializations[0], ExperienceYears = 12 },
@@ -106,10 +84,6 @@ public static class VeterinaryClinicTestData
         new() { Id = 10, PassportNumber = "4010 100010", Phone = "+7999111010", LastName = "Ковалёва", FirstName = "Екатерина", Patronymic = "Денисовна", BirthDate = new DateOnly(1992, 8, 3), Specialization = Specializations[9], ExperienceYears = 6 },
         new() { Id = 11, PassportNumber = "4010 100011", Phone = "+7999111011", LastName = "Лебедева", FirstName = "Наталья", Patronymic = "Ильинична", BirthDate = new DateOnly(1993, 10, 27), Specialization = Specializations[9], ExperienceYears = 5 }
     });
-
-    /// <summary>
-    /// Список записей на приём
-    /// </summary>
     public static IReadOnlyList<Appointment> Appointments { get; } = Array.AsReadOnly(new Appointment[]
     {
         new() { Id = 1, Pet = Pets[0], Veterinarian = Veterinarians[0], AppointmentDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 2), RoomNumber = 101, IsRepeated = false },

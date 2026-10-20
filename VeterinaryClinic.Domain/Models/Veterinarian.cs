@@ -1,32 +1,27 @@
 namespace VeterinaryClinic.Domain.Models;
-
 /// <summary>
-/// Ветеринар
+/// Ветеринарный врач
 /// </summary>
 public class Veterinarian : Person
 {
     /// <summary>
-    /// Идентификатор ветеринара
+    /// Идентификатор врача
     /// </summary>
     public int Id { get; set; }
-
     /// <summary>
-    /// Номер паспорта
+    /// Номер паспорта врача
     /// </summary>
     public string PassportNumber { get; set; } = string.Empty;
-
     /// <summary>
-    /// Дата рождения
+    /// Дата рождения врача
     /// </summary>
     public DateOnly BirthDate { get; set; }
-
     /// <summary>
-    /// Специализация
+    /// Специализация врача и обслуживаемый вид животных
     /// </summary>
     public Specialization Specialization { get; set; } = null!;
-
     /// <summary>
-    /// Стаж работы в годах
+    /// Стаж работы в полных годах
     /// </summary>
     public int ExperienceYears { get; set; }
 }

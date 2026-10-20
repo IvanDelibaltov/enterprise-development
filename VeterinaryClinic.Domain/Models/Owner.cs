@@ -1,7 +1,6 @@
 namespace VeterinaryClinic.Domain.Models;
-
 /// <summary>
-/// Владелец питомцев
+/// Владелец одного или нескольких питомцев
 /// </summary>
 public class Owner : Person
 {
@@ -9,14 +8,12 @@ public class Owner : Person
     /// Идентификатор владельца
     /// </summary>
     public int Id { get; set; }
-
     /// <summary>
-    /// Адрес
+    /// Адрес владельца
     /// </summary>
     public string Address { get; set; } = string.Empty;
-
     /// <summary>
-    /// Питомцы владельца
+    /// Питомцы, связанные с владельцем
     /// </summary>
     public List<Pet> Pets { get; } = [];
 }

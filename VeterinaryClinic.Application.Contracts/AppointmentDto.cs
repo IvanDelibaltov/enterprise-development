@@ -1,11 +1,13 @@
-using VeterinaryClinic.Domain.Shared.Enums;
 namespace VeterinaryClinic.Application.Contracts;
 
 /// <summary>
-/// Данные записи на приём
+/// Данные приёма в ответе
 /// </summary>
-public record AppointmentDto(int Id, int PetId, int VeterinarianId, DateTime AppointmentDate, int RoomNumber, bool IsRepeated);
-/// <summary>
-/// Данные для создания или обновления записи на приём
-/// </summary>
-public record SaveAppointmentRequest(int PetId, int VeterinarianId, DateTime AppointmentDate, int RoomNumber, bool IsRepeated);
+/// <param name="Id">Идентификатор</param>
+/// <param name="PetId">Идентификатор питомца</param>
+/// <param name="VeterinarianId">Идентификатор ветеринара</param>
+/// <param name="AppointmentDate">Дата и время приёма</param>
+/// <param name="RoomNumber">Номер кабинета</param>
+/// <param name="IsRepeated">Признак повторного приёма</param>
+public record AppointmentDto(int Id, int PetId, int VeterinarianId, DateTime AppointmentDate, int RoomNumber,
+    bool IsRepeated);

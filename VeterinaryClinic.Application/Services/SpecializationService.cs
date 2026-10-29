@@ -1,31 +1,47 @@
+using VeterinaryClinic.Domain.Commands;
 using VeterinaryClinic.Application.Contracts;
-using VeterinaryClinic.Application.Repositories;
+using VeterinaryClinic.Domain.Repositories;
 using VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Application.Services;
 
 /// <summary>
-/// Реализует операции с специализациями ветеринаров
+/// Сервис специализаций
 /// </summary>
-public sealed class SpecializationService(IRepository<Specialization> specializations, IRepository<Veterinarian> veterinarians)
+public sealed class SpecializationService(IRepository<Specialization> specializations,
+    ISpecializationRepository repository) : ISpecializationService
 {
     /// <summary>
     /// Возвращает все специализации
     /// </summary>
-    public IReadOnlyList<SpecializationDto> Specializations() => specializations.GetAll().Select(DtoMapper.Map).ToArray();
-    /// <summary>
-    /// Создаёт или обновляет специализацию ветеринара
-    /// </summary>
-    public SpecializationDto Save(int? id, SaveSpecializationRequest x)
+    public IReadOnlyList<SpecializationDto> Specializations()
+        => specializations.GetAll().Select(DtoMapper.Map).ToArray();
+    /// <summary>Возвращает специализацию по идентификатору</summary>
+    public SpecializationDto? Get(int id) => specializations.Get(id) is { } entity ? DtoMapper.Map(entity) : null;
+
+    /// <summary>Создаёт специализацию</summary>
+    public SpecializationDto Create(SaveSpecializationRequest x)
     {
-        if (string.IsNullOrWhiteSpace(x.Name) || !Enum.IsDefined(x.AnimalType)) throw new ArgumentException("Invalid specialization");
-        var e = id.HasValue ? specializations.Get(id.Value) ?? throw new KeyNotFoundException() : new Specialization { Id = specializations.NextId() };
-        if (id.HasValue && e.AnimalType != x.AnimalType && veterinarians.GetAll().Any(v => v.Specialization.Id == e.Id))
-            throw new InvalidOperationException("Cannot change species of a specialization used by veterinarians");
-        e.Name = x.Name.Trim(); e.AnimalType = x.AnimalType;
-        if (!id.HasValue) specializations.Add(e);
-        return DtoMapper.Map(e);
+        if (string.IsNullOrWhiteSpace(x.Name)
+            || !Enum.IsDefined(x.AnimalType)) throw new ArgumentException("Invalid specialization");
+        var saved = repository.CreateSpecialization(new SpecializationCommand(x.Name, x.AnimalType));
+        return DtoMapper.Map(saved);
     }
-    public void DeleteSpecialization(int id) { if (veterinarians.GetAll().Any(x => x.Specialization.Id == id)) throw new InvalidOperationException("Specialization is in use"); specializations.Remove(id); }
+
+    /// <summary>Обновляет специализацию</summary>
+    public SpecializationDto Update(int id, SaveSpecializationRequest x)
+    {
+        if (string.IsNullOrWhiteSpace(x.Name)
+            || !Enum.IsDefined(x.AnimalType)) throw new ArgumentException("Invalid specialization");
+        var saved = repository.UpdateSpecialization(id, new SpecializationCommand(x.Name, x.AnimalType));
+        return DtoMapper.Map(saved);
+    }
+
+    public void DeleteSpecialization(int id) => repository.DeleteSpecialization(id);
+    /// <summary>Возвращает ветеринаров по специализации</summary>
+    public IReadOnlyList<VeterinarianDto> VeterinariansBySpecialization(int id)
+    {
+        return repository.VeterinariansBySpecialization(id).Select(DtoMapper.Map).ToArray();
+    }
 }

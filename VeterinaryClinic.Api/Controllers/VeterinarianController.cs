@@ -5,21 +5,21 @@ using VeterinaryClinic.Domain.Shared.Enums;
 namespace VeterinaryClinic.Api.Controllers;
 
 /// <summary>
-/// Предоставляет HTTP-операции для работы с ветеринарными врачами
+/// Контроллер для работы с ветеринарами
 /// </summary>
 [ApiController]
 [Route("api/veterinarians")]
-public sealed class VeterinarianController(VeterinarianService clinic) : ControllerBase
+public sealed class VeterinarianController(IVeterinarianService service) : ControllerBase
 {
     /// <summary>
-    /// Возвращает всех ветеринарных врачей
+    /// Получить всех ветеринаров
     /// </summary>
     [HttpGet]
     [EndpointSummary("Get all veterinarians")]
     [ProducesResponseType(typeof(IReadOnlyList<VeterinarianDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<VeterinarianDto>> GetAll() => Ok(clinic.Veterinarians());
+    public ActionResult<IReadOnlyList<VeterinarianDto>> GetAll() => Ok(service.Veterinarians());
     /// <summary>
-    /// Возвращает ветеринарного врача по идентификатору
+    /// Получить ветеринара по идентификатору
     /// </summary>
     [HttpGet("{id:int}")]
     [EndpointSummary("Get veterinarian by ID")]
@@ -27,11 +27,11 @@ public sealed class VeterinarianController(VeterinarianService clinic) : Control
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<VeterinarianDto> Get(int id)
     {
-        var entity = clinic.Veterinarians().FirstOrDefault(x => x.Id == id);
+        var entity = service.Get(id);
         return entity is null ? NotFound() : Ok(entity);
     }
     /// <summary>
-    /// Создаёт нового ветеринарного врача
+    /// Создать ветеринара
     /// </summary>
     [HttpPost]
     [EndpointSummary("Create veterinarian")]
@@ -39,20 +39,21 @@ public sealed class VeterinarianController(VeterinarianService clinic) : Control
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<VeterinarianDto> Create(SaveVeterinarianRequest request)
     {
-        var entity = clinic.Save((int?)null, request);
+        var entity = service.Create(request);
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
     /// <summary>
-    /// Обновляет ветеринарного врача по идентификатору
+    /// Обновить ветеринара
     /// </summary>
     [HttpPut("{id:int}")]
     [EndpointSummary("Update veterinarian")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(VeterinarianDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<VeterinarianDto> Update(int id, SaveVeterinarianRequest request) => Ok(clinic.Save((int?)id, request));
+    public ActionResult<VeterinarianDto> Update(int id, SaveVeterinarianRequest request)
+        => Ok(service.Update(id, request));
     /// <summary>
-    /// Удаляет ветеринарного врача по идентификатору
+    /// Удалить ветеринара
     /// </summary>
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete veterinarian")]
@@ -60,23 +61,33 @@ public sealed class VeterinarianController(VeterinarianService clinic) : Control
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public IActionResult Delete(int id)
     {
-        clinic.DeleteVeterinarian(id);
+        service.DeleteVeterinarian(id);
         return NoContent();
     }
 
     /// <summary>
-    /// Возвращает ветеринаров, работающих с указанным видом животных
+    /// Получить ветеринаров по виду животного
     /// </summary>
     [HttpGet("by-species/{species}")]
     [EndpointSummary("Get veterinarians by animal species")]
     [ProducesResponseType(typeof(IReadOnlyList<VeterinarianDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<VeterinarianDto>> BySpecies(AnimalType species) => Ok(clinic.VeterinariansBySpecies(species));
+    public ActionResult<IReadOnlyList<VeterinarianDto>> BySpecies(AnimalType species)
+        => Ok(service.VeterinariansBySpecies(species));
     /// <summary>
-    /// Возвращает питомцев, которых принимает ветеринар
+    /// Получить приёмы ветеринара
     /// </summary>
+    [HttpGet("{id:int}/appointments")]
+    [EndpointSummary("Get appointments by veterinarian")]
+    [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<IReadOnlyList<AppointmentDto>> GetAppointments(int id) =>
+        Ok(service.AppointmentsByVeterinarian(id));
+
+    /// <summary>Возвращает питомцев ветеринара без повторов</summary>
     [HttpGet("{id:int}/pets")]
-    [EndpointSummary("Get pets assigned to veterinarian")]
+    [EndpointSummary("Get pets by veterinarian")]
     [ProducesResponseType(typeof(IReadOnlyList<PetDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<PetDto>> PetsByDoctor(int id) => clinic.Veterinarians().Any(x => x.Id == id) ? Ok(clinic.PetsByVeterinarian(id)) : NotFound();
+    public ActionResult<IReadOnlyList<PetDto>> PetsByDoctor(int id) => service.Get(id) is not null
+        ? Ok(service.PetsByVeterinarian(id)) : NotFound();
 
 }

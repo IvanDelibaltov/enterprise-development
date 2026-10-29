@@ -5,21 +5,21 @@ using VeterinaryClinic.Application.Services;
 namespace VeterinaryClinic.Api.Controllers;
 
 /// <summary>
-/// Предоставляет HTTP-операции для работы с питомцами
+/// Контроллер для работы с питомцами
 /// </summary>
 [ApiController]
 [Route("api/pets")]
-public sealed class PetController(PetService clinic) : ControllerBase
+public sealed class PetController(IPetService service) : ControllerBase
 {
     /// <summary>
-    /// Возвращает всех питомцев
+    /// Получить всех питомцев
     /// </summary>
     [HttpGet]
     [EndpointSummary("Get all pets")]
     [ProducesResponseType(typeof(IReadOnlyList<PetDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<PetDto>> GetAll() => Ok(clinic.Pets());
+    public ActionResult<IReadOnlyList<PetDto>> GetAll() => Ok(service.Pets());
     /// <summary>
-    /// Возвращает питомца по идентификатору
+    /// Получить питомца по идентификатору
     /// </summary>
     [HttpGet("{id:int}")]
     [EndpointSummary("Get pet by ID")]
@@ -27,11 +27,11 @@ public sealed class PetController(PetService clinic) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<PetDto> Get(int id)
     {
-        var entity = clinic.Pets().FirstOrDefault(x => x.Id == id);
+        var entity = service.Get(id);
         return entity is null ? NotFound() : Ok(entity);
     }
     /// <summary>
-    /// Создаёт нового питомца
+    /// Создать питомца
     /// </summary>
     [HttpPost]
     [EndpointSummary("Create pet")]
@@ -39,20 +39,20 @@ public sealed class PetController(PetService clinic) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<PetDto> Create(SavePetRequest request)
     {
-        var entity = clinic.Save((int?)null, request);
+        var entity = service.Create(request);
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
     /// <summary>
-    /// Обновляет питомца по идентификатору
+    /// Обновить питомца
     /// </summary>
     [HttpPut("{id:int}")]
     [EndpointSummary("Update pet")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(PetDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<PetDto> Update(int id, SavePetRequest request) => Ok(clinic.Save((int?)id, request));
+    public ActionResult<PetDto> Update(int id, SavePetRequest request) => Ok(service.Update(id, request));
     /// <summary>
-    /// Удаляет питомца по идентификатору
+    /// Удалить питомца
     /// </summary>
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete pet")]
@@ -60,8 +60,23 @@ public sealed class PetController(PetService clinic) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public IActionResult Delete(int id)
     {
-        clinic.DeletePet(id);
+        service.DeletePet(id);
         return NoContent();
     }
+    /// <summary>Возвращает приёмы питомца</summary>
+    [HttpGet("{id:int}/appointments")]
+    [EndpointSummary("Get appointments by pet")]
+    [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<IReadOnlyList<AppointmentDto>> GetAppointments(int id) =>
+        Ok(service.AppointmentsByPet(id));
 
+    /// <summary>Возвращает владельца питомца</summary>
+    [HttpGet("{id:int}/owner")]
+    [EndpointSummary("Get pet owner")]
+    public ActionResult<OwnerDto> GetOwner(int id)
+    {
+        var owner = service.OwnerByPet(id);
+        return owner is null ? NotFound() : Ok(owner);
+    }
 }

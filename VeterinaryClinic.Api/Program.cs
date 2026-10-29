@@ -1,37 +1,29 @@
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using VeterinaryClinic.Application.Services;
+using VeterinaryClinic.Application.Contracts;
+using VeterinaryClinic.Api;
 using VeterinaryClinic.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddControllers(options =>
+    options.Filters.Add<ApiRequestLoggingFilter>())
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 builder.Services.AddClinicRepositories();
-builder.Services.AddScoped<BreedService>();
-builder.Services.AddScoped<SpecializationService>();
-builder.Services.AddScoped<OwnerService>();
-builder.Services.AddScoped<VeterinarianService>();
-builder.Services.AddScoped<PetService>();
-builder.Services.AddScoped<AppointmentService>();
+builder.Services.AddScoped<IBreedService, BreedService>();
+builder.Services.AddScoped<ISpecializationService, SpecializationService>();
+builder.Services.AddScoped<IOwnerService, OwnerService>();
+builder.Services.AddScoped<IVeterinarianService, VeterinarianService>();
+builder.Services.AddScoped<IPetService, PetService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<ApiRequestLoggingFilter>();
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 var app = builder.Build();
-app.UseExceptionHandler(handler => handler.Run(async context =>
-{
-    var error = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-    var status = error switch
-    {
-        KeyNotFoundException => StatusCodes.Status404NotFound,
-        ArgumentException => StatusCodes.Status400BadRequest,
-        InvalidOperationException => StatusCodes.Status409Conflict,
-        _ => StatusCodes.Status500InternalServerError
-    };
-    if (status == 500) app.Logger.LogError(error, "Unhandled API error");
-    context.Response.StatusCode = status;
-    await Results.Problem(statusCode: status, title: status == 500 ? "Internal server error" : error?.Message).ExecuteAsync(context);
-}));
+app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -39,4 +31,3 @@ if (app.Environment.IsDevelopment())
 }
 app.MapControllers();
 app.Run();
-public partial class Program;

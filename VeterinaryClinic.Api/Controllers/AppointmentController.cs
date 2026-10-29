@@ -5,21 +5,21 @@ using VeterinaryClinic.Application.Services;
 namespace VeterinaryClinic.Api.Controllers;
 
 /// <summary>
-/// Предоставляет HTTP-операции для работы с записями на приём
+/// Контроллер для работы с приёмами
 /// </summary>
 [ApiController]
 [Route("api/appointments")]
-public sealed class AppointmentController(AppointmentService clinic) : ControllerBase
+public sealed class AppointmentController(IAppointmentService service) : ControllerBase
 {
     /// <summary>
-    /// Возвращает все записи на приём
+    /// Получить все приёмы
     /// </summary>
     [HttpGet]
     [EndpointSummary("Get all appointments")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<AppointmentDto>> GetAll() => Ok(clinic.Appointments());
+    public ActionResult<IReadOnlyList<AppointmentDto>> GetAll() => Ok(service.Appointments());
     /// <summary>
-    /// Возвращает запись на приём по идентификатору
+    /// Получить приём по идентификатору
     /// </summary>
     [HttpGet("{id:int}")]
     [EndpointSummary("Get appointment by ID")]
@@ -27,11 +27,11 @@ public sealed class AppointmentController(AppointmentService clinic) : Controlle
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<AppointmentDto> Get(int id)
     {
-        var entity = clinic.Appointments().FirstOrDefault(x => x.Id == id);
+        var entity = service.Get(id);
         return entity is null ? NotFound() : Ok(entity);
     }
     /// <summary>
-    /// Создаёт новую запись на приём
+    /// Создать приём
     /// </summary>
     [HttpPost]
     [EndpointSummary("Create appointment")]
@@ -39,20 +39,21 @@ public sealed class AppointmentController(AppointmentService clinic) : Controlle
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<AppointmentDto> Create(SaveAppointmentRequest request)
     {
-        var entity = clinic.Save((int?)null, request);
+        var entity = service.Create(request);
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
     /// <summary>
-    /// Обновляет запись на приём по идентификатору
+    /// Обновить приём
     /// </summary>
     [HttpPut("{id:int}")]
     [EndpointSummary("Update appointment")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<AppointmentDto> Update(int id, SaveAppointmentRequest request) => Ok(clinic.Save((int?)id, request));
+    public ActionResult<AppointmentDto> Update(int id, SaveAppointmentRequest request)
+        => Ok(service.Update(id, request));
     /// <summary>
-    /// Удаляет запись на приём по идентификатору
+    /// Удалить приём
     /// </summary>
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete appointment")]
@@ -60,16 +61,22 @@ public sealed class AppointmentController(AppointmentService clinic) : Controlle
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public IActionResult Delete(int id)
     {
-        clinic.DeleteAppointment(id);
+        service.DeleteAppointment(id);
         return NoContent();
     }
 
     /// <summary>
-    /// Возвращает записи на приём за текущий месяц
+    /// Получить приёмы за текущий месяц
     /// </summary>
     [HttpGet("current-month")]
-    [EndpointSummary("Get appointments for the current month")]
+    [EndpointSummary("Get appointments for current month")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<AppointmentDto>> CurrentMonth([FromQuery] int roomNumber) => roomNumber > 0 ? Ok(clinic.AppointmentsThisMonth(roomNumber, DateTime.Today)) : BadRequest();
+    public ActionResult<IReadOnlyList<AppointmentDto>> CurrentMonth([FromQuery] int roomNumber)
+    {
+        if (roomNumber <= 0)
+            return BadRequest();
+
+        return Ok(service.AppointmentsThisMonth(roomNumber, DateTime.Today));
+    }
 
 }

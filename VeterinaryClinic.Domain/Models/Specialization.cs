@@ -2,7 +2,7 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Domain.Models;
 /// <summary>
-/// Специализация ветеринарного врача
+/// Специализация ветеринара
 /// </summary>
 public class Specialization
 {
@@ -15,7 +15,7 @@ public class Specialization
     /// </summary>
     public string Name { get; set; } = string.Empty;
     /// <summary>
-    /// Вид животных, с которыми работает специалист
+    /// Вид животных для специализации
     /// </summary>
     public AnimalType AnimalType { get; set; }
 }

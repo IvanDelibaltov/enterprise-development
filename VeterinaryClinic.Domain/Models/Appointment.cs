@@ -1,21 +1,21 @@
 namespace VeterinaryClinic.Domain.Models;
 /// <summary>
-/// Запись питомца на приём к ветеринару
+/// Запись питомца на приём
 /// </summary>
 public class Appointment
 {
     /// <summary>
-    /// Идентификатор записи
+    /// Идентификатор приёма
     /// </summary>
     public int Id { get; set; }
     /// <summary>
-    /// Питомец, записанный на приём
+    /// Питомец на приёме
     /// </summary>
-    public Pet Pet { get; set; } = null!;
+    public required Pet Pet { get; set; }
     /// <summary>
-    /// Врач, ведущий приём
+    /// Ветеринар на приёме
     /// </summary>
-    public Veterinarian Veterinarian { get; set; } = null!;
+    public required Veterinarian Veterinarian { get; set; }
     /// <summary>
     /// Дата и время приёма
     /// </summary>

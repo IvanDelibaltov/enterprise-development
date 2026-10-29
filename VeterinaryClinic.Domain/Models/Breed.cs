@@ -15,7 +15,7 @@ public class Breed
     /// </summary>
     public string Name { get; set; } = string.Empty;
     /// <summary>
-    /// Вид животного, к которому относится порода
+    /// Вид животного для этой породы
     /// </summary>
     public AnimalType AnimalType { get; set; }
 }

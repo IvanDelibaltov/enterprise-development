@@ -5,21 +5,21 @@ using VeterinaryClinic.Application.Services;
 namespace VeterinaryClinic.Api.Controllers;
 
 /// <summary>
-/// Предоставляет HTTP-операции для работы с породами животных
+/// Контроллер для работы с породами
 /// </summary>
 [ApiController]
 [Route("api/breeds")]
-public sealed class BreedController(BreedService clinic) : ControllerBase
+public sealed class BreedController(IBreedService service) : ControllerBase
 {
     /// <summary>
-    /// Возвращает все породы животных
+    /// Получить все породы
     /// </summary>
     [HttpGet]
     [EndpointSummary("Get all breeds")]
     [ProducesResponseType(typeof(IReadOnlyList<BreedDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<BreedDto>> GetAll() => Ok(clinic.Breeds());
+    public ActionResult<IReadOnlyList<BreedDto>> GetAll() => Ok(service.Breeds());
     /// <summary>
-    /// Возвращает породу животного по идентификатору
+    /// Получить породу по идентификатору
     /// </summary>
     [HttpGet("{id:int}")]
     [EndpointSummary("Get breed by ID")]
@@ -27,11 +27,11 @@ public sealed class BreedController(BreedService clinic) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<BreedDto> Get(int id)
     {
-        var entity = clinic.Breeds().FirstOrDefault(x => x.Id == id);
+        var entity = service.Get(id);
         return entity is null ? NotFound() : Ok(entity);
     }
     /// <summary>
-    /// Создаёт новую породу животного
+    /// Создать породу
     /// </summary>
     [HttpPost]
     [EndpointSummary("Create breed")]
@@ -39,20 +39,20 @@ public sealed class BreedController(BreedService clinic) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<BreedDto> Create(SaveBreedRequest request)
     {
-        var entity = clinic.Save((int?)null, request);
+        var entity = service.Create(request);
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
     /// <summary>
-    /// Обновляет породу животного по идентификатору
+    /// Обновить породу
     /// </summary>
     [HttpPut("{id:int}")]
     [EndpointSummary("Update breed")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BreedDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<BreedDto> Update(int id, SaveBreedRequest request) => Ok(clinic.Save((int?)id, request));
+    public ActionResult<BreedDto> Update(int id, SaveBreedRequest request) => Ok(service.Update(id, request));
     /// <summary>
-    /// Удаляет породу животного по идентификатору
+    /// Удалить породу
     /// </summary>
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete breed")]
@@ -60,16 +60,21 @@ public sealed class BreedController(BreedService clinic) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public IActionResult Delete(int id)
     {
-        clinic.DeleteBreed(id);
+        service.DeleteBreed(id);
         return NoContent();
     }
 
     /// <summary>
-    /// Возвращает количество повторных приёмов для породы
+    /// Посчитать повторные приёмы по породе
     /// </summary>
     [HttpGet("{id:int}/repeated-appointments/count")]
     [EndpointSummary("Count repeated appointments by breed")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
-    public ActionResult<int> RepeatedCount(int id) => clinic.Breeds().Any(x => x.Id == id) ? Ok(clinic.RepeatedAppointments(id)) : NotFound();
-
+    public ActionResult<int> RepeatedCount(int id) => Ok(service.RepeatedAppointments(id));
+    /// <summary>
+    /// Получить питомцев по породе
+    /// </summary>
+    [HttpGet("{id:int}/pets")]
+    [EndpointSummary("Get pets by breed")]
+    public ActionResult<IReadOnlyList<PetDto>> GetPets(int id) => Ok(service.PetsByBreed(id));
 }

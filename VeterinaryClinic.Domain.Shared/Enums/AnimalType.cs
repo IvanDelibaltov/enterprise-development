@@ -1,7 +1,7 @@
 namespace VeterinaryClinic.Domain.Shared.Enums;
 
 /// <summary>
-/// Биологический вид животного
+/// Вид животного
 /// </summary>
 public enum AnimalType
 {

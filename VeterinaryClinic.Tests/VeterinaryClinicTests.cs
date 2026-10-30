@@ -3,6 +3,9 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Tests;
 
+/// <summary>
+/// Проверяет работу тестовых данных клиники
+/// </summary>
 public class VeterinaryClinicTests
 {
     public static IEnumerable<object[]> VeterinarianCases =>

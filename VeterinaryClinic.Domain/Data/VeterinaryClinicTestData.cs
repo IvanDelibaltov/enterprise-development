@@ -3,10 +3,14 @@ using VeterinaryClinic.Domain.Shared.Enums;
 
 namespace VeterinaryClinic.Domain.Data;
 
-/// <summary>Начальные тестовые данные клиники</summary>
+/// <summary>
+/// Начальные тестовые данные клиники
+/// </summary>
 public static class VeterinaryClinicTestData
 {
-    /// <summary>Тестовые породы</summary>
+    /// <summary>
+    /// Тестовые породы
+    /// </summary>
     public static IReadOnlyList<Breed> Breeds { get; } = Array.AsReadOnly(new Breed[]
     {
         new() { Id = 1, Name = "Лабрадор", AnimalType = AnimalType.Dog },
@@ -21,7 +25,10 @@ public static class VeterinaryClinicTestData
         new() { Id = 10, Name = "Красноухая черепаха", AnimalType = AnimalType.Reptile },
         new() { Id = 11, Name = "Сирийский хомяк", AnimalType = AnimalType.Rodent }
     });
-    /// <summary>Тестовые владельцы</summary>
+
+    /// <summary>
+    /// Тестовые владельцы
+    /// </summary>
     public static IReadOnlyList<Owner> Owners { get; } = Array.AsReadOnly(new Owner[]
     {
         new() { Id = 1, LastName = "Алексеев", FirstName = "Антон", Patronymic = "Игоревич",
@@ -45,7 +52,10 @@ public static class VeterinaryClinicTestData
         new() { Id = 10, LastName = "Крылова", FirstName = "Наталья", Patronymic = "Михайловна",
             Address = "ул. Речная, 10", Phone = "+79990000010" }
     });
-    /// <summary>Тестовые питомцы</summary>
+
+    /// <summary>
+    /// Тестовые питомцы
+    /// </summary>
     public static IReadOnlyList<Pet> Pets { get; } = Array.AsReadOnly(new Pet[]
     {
         new() { Id = 1, Name = "Бим", Breed = Breeds[0], BirthDate = new DateOnly(2020, 3, 12), Weight = 28.5,
@@ -91,7 +101,10 @@ public static class VeterinaryClinicTestData
         new() { Id = 21, Name = "Пуфик", Breed = Breeds[10], BirthDate = new DateOnly(2024, 2, 14), Weight = 0.12,
             Owner = Owners[6] }
     });
-    /// <summary>Тестовые специализации</summary>
+
+    /// <summary>
+    /// Тестовые специализации
+    /// </summary>
     public static IReadOnlyList<Specialization> Specializations { get; } = Array.AsReadOnly(new Specialization[]
     {
         new() { Id = 1, Name = "Терапевт", AnimalType = AnimalType.Dog },
@@ -99,10 +112,16 @@ public static class VeterinaryClinicTestData
         new() { Id = 3, Name = "Орнитолог", AnimalType = AnimalType.Bird },
         new() { Id = 4, Name = "Терапевт", AnimalType = AnimalType.Rabbit },
         new() { Id = 5, Name = "Герпетолог", AnimalType = AnimalType.Reptile },
-        new() { Id = 10, Name = "Ратолог", AnimalType = AnimalType.Rodent },
-        new() { Id = 11, Name = "Экзотолог", AnimalType = AnimalType.Rodent }
+        new() { Id = 6, Name = "Ратолог", AnimalType = AnimalType.Rodent },
+        new() { Id = 7, Name = "Экзотолог", AnimalType = AnimalType.Rodent },
+        new() { Id = 8, Name = "Кардиолог", AnimalType = AnimalType.Dog },
+        new() { Id = 9, Name = "Стоматолог", AnimalType = AnimalType.Cat },
+        new() { Id = 10, Name = "Дерматолог", AnimalType = AnimalType.Rabbit }
     });
-    /// <summary>Тестовые ветеринары</summary>
+
+    /// <summary>
+    /// Тестовые ветеринары
+    /// </summary>
     public static IReadOnlyList<Veterinarian> Veterinarians { get; } = Array.AsReadOnly(new Veterinarian[]
     {
         new() { Id = 1, PassportNumber = "4010 100001", Phone = "+7999111001", LastName = "Андреев", FirstName = "Иван",
@@ -148,7 +167,10 @@ public static class VeterinaryClinicTestData
             Patronymic = "Ильинична", BirthDate = new DateOnly(1993, 10, 27), Specialization = Specializations[6],
             ExperienceYears = 5 }
     });
-    /// <summary>Тестовые приёмы</summary>
+
+    /// <summary>
+    /// Тестовые приёмы
+    /// </summary>
     public static IReadOnlyList<Appointment> Appointments { get; } = Array.AsReadOnly(new Appointment[]
     {
         new() { Id = 1, Pet = Pets[0], Veterinarian = Veterinarians[0],

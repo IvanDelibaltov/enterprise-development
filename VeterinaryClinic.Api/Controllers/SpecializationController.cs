@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using VeterinaryClinic.Application.Contracts;
-using VeterinaryClinic.Application.Services;
 
 namespace VeterinaryClinic.Api.Controllers;
 
@@ -18,9 +16,11 @@ public sealed class SpecializationController(ISpecializationService service) : C
     [EndpointSummary("Get all specializations")]
     [ProducesResponseType(typeof(IReadOnlyList<SpecializationDto>), StatusCodes.Status200OK)]
     public ActionResult<IReadOnlyList<SpecializationDto>> GetAll() => Ok(service.Specializations());
+
     /// <summary>
     /// Получить специализацию по идентификатору
     /// </summary>
+    /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}")]
     [EndpointSummary("Get specialization by ID")]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status200OK)]
@@ -30,9 +30,11 @@ public sealed class SpecializationController(ISpecializationService service) : C
         var entity = service.Get(id);
         return entity is null ? NotFound() : Ok(entity);
     }
+
     /// <summary>
     /// Создать специализацию
     /// </summary>
+    /// <param name="request">Данные запроса</param>
     [HttpPost]
     [EndpointSummary("Create specialization")]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status201Created)]
@@ -42,9 +44,12 @@ public sealed class SpecializationController(ISpecializationService service) : C
         var entity = service.Create(request);
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
+
     /// <summary>
     /// Обновить специализацию
     /// </summary>
+    /// <param name="id">Идентификатор записи</param>
+    /// <param name="request">Данные запроса</param>
     [HttpPut("{id:int}")]
     [EndpointSummary("Update specialization")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -52,9 +57,11 @@ public sealed class SpecializationController(ISpecializationService service) : C
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<SpecializationDto> Update(int id, SaveSpecializationRequest request)
         => Ok(service.Update(id, request));
+
     /// <summary>
     /// Удалить специализацию
     /// </summary>
+    /// <param name="id">Идентификатор записи</param>
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete specialization")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -64,9 +71,11 @@ public sealed class SpecializationController(ISpecializationService service) : C
         service.DeleteSpecialization(id);
         return NoContent();
     }
+
     /// <summary>
     /// Получить ветеринаров по специализации
     /// </summary>
+    /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}/veterinarians")]
     [EndpointSummary("Get veterinarians by specialization")]
     public ActionResult<IReadOnlyList<VeterinarianDto>> GetVeterinarians(int id)

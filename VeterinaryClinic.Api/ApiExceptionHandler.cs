@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Diagnostics;
 
 namespace VeterinaryClinic.Api;
 
-/// <summary>Преобразует исключения в HTTP-ответы</summary>
+/// <summary>
+/// Обрабатывает исключения API и возвращает соответствующий HTTP-ответ
+/// </summary>
 public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : IExceptionHandler
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception,
         CancellationToken cancellationToken)
     {

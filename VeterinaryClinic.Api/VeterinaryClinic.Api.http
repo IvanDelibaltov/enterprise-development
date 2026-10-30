@@ -1,6 +1,0 @@
-@VeterinaryClinic.Api_HostAddress = http://localhost:5023
-
-GET {{VeterinaryClinic.Api_HostAddress}}/api/pets
-
-###
-GET {{VeterinaryClinic.Api_HostAddress}}/api/owners

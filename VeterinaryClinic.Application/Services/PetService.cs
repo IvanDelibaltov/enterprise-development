@@ -1,51 +1,110 @@
-using VeterinaryClinic.Domain.Commands;
-using VeterinaryClinic.Application.Contracts;
-using VeterinaryClinic.Domain.Repositories;
 using VeterinaryClinic.Domain.Models;
-using VeterinaryClinic.Domain.Shared.Enums;
+using VeterinaryClinic.Domain.Repositories;
 
 namespace VeterinaryClinic.Application.Services;
 
 /// <summary>
-/// Сервис питомцев
+/// Выполняет операции с ресурсом «питомец»
 /// </summary>
-public sealed class PetService(IRepository<Pet> pets, IPetRepository repository) : IPetService
+public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds, IRepository<Owner> owners, IRepository<Appointment> appointments) : IPetService
 {
     /// <summary>
     /// Возвращает всех питомцев
     /// </summary>
     public IReadOnlyList<PetDto> Pets() => pets.GetAll().Select(DtoMapper.Map).ToArray();
-    /// <summary>Возвращает питомца по идентификатору</summary>
-    public PetDto? Get(int id) => pets.Get(id) is { } entity ? DtoMapper.Map(entity) : null;
 
-    /// <summary>Создаёт питомца</summary>
+    /// <summary>
+    /// Находит питомца
+    /// </summary>
+    /// <param name="id">Идентификатор записи</param>
+    public PetDto? Get(int id) => pets.Get(id) is { } p ? DtoMapper.Map(p) : null;
+
+    /// <summary>
+    /// Создаёт питомца
+    /// </summary>
+    /// <param name="x">Данные для сохранения</param>
     public PetDto Create(SavePetRequest x)
     {
-        if (string.IsNullOrWhiteSpace(x.Name) || x.Weight <= 0 || !double.IsFinite(x.Weight)
-            || x.BirthDate > DateOnly.FromDateTime(DateTime.Today))
-            throw new ArgumentException("Invalid pet");
-        var saved = repository.CreatePet(new PetCommand(x.Name, x.BreedId, x.BirthDate, x.Weight, x.OwnerId));
+        Validate(x);
+        var breed = breeds.Get(x.BreedId) ?? throw new ArgumentException("Breed not found");
+        var owner = ResolveOwner(x.OwnerId);
+        var saved = pets.Create(id =>
+        {
+            var p = new Pet
+            {
+                Id = id,
+                Name = x.Name,
+                Breed = breed,
+                BirthDate = x.BirthDate,
+                Weight = x.Weight
+            }; AssignOwner(p, owner); return p;
+        });
         return DtoMapper.Map(saved);
     }
 
-    /// <summary>Обновляет питомца</summary>
+    /// <summary>
+    /// Изменяет питомца с проверкой существующих приёмов
+    /// </summary>
+    /// <param name="id">Идентификатор записи</param>
+    /// <param name="x">Данные для сохранения</param>
     public PetDto Update(int id, SavePetRequest x)
     {
-        if (string.IsNullOrWhiteSpace(x.Name) || x.Weight <= 0 || !double.IsFinite(x.Weight)
-            || x.BirthDate > DateOnly.FromDateTime(DateTime.Today))
-            throw new ArgumentException("Invalid pet");
-        var saved = repository.UpdatePet(id, new PetCommand(x.Name, x.BreedId, x.BirthDate, x.Weight, x.OwnerId));
-        return DtoMapper.Map(saved);
+        Validate(x);
+        var breed = breeds.Get(x.BreedId) ?? throw new ArgumentException("Breed not found");
+        var owner = ResolveOwner(x.OwnerId);
+        if (appointments.Any(a => a.Pet.Id == id && a.Veterinarian.Specialization.AnimalType != breed.AnimalType))
+            throw new InvalidOperationException("Breed is incompatible with existing appointments");
+        return DtoMapper.Map(pets.Update(id, p =>
+        {
+            p.Name = x.Name; p.Breed = breed;
+            p.Weight = x.Weight; p.BirthDate = x.BirthDate; AssignOwner(p, owner);
+        }));
     }
 
-    /// <summary>Возвращает приёмы питомца</summary>
-    public IReadOnlyList<AppointmentDto> AppointmentsByPet(int id) =>
-        repository.AppointmentsByPet(id).Select(DtoMapper.Map).ToArray();
-
-    public void DeletePet(int id) => repository.DeletePet(id);
-    /// <summary>Возвращает владельца питомца</summary>
-    public OwnerDto? OwnerByPet(int id)
+    /// <summary>
+    /// Удаляет питомца, у которого нет приёмов
+    /// </summary>
+    /// <param name="id">Идентификатор записи</param>
+    public void DeletePet(int id)
     {
-        return repository.GetPetOwner(id) is { } owner ? DtoMapper.Map(owner) : null;
+        var pet = pets.Get(id);
+        if (pet is null) return;
+        if (appointments.Any(a => a.Pet.Id == id)) throw new InvalidOperationException("Pet has appointments");
+        AssignOwner(pet, null);
+        pets.Remove(id);
+    }
+
+    /// <summary>
+    /// Возвращает приёмы питомца
+    /// </summary>
+    /// <param name="id">Идентификатор записи</param>
+    public IReadOnlyList<global::VeterinaryClinic.Application.Contracts.Appointments.AppointmentDto> AppointmentsByPet(int id)
+    {
+        if (pets.Get(id) is null) throw new KeyNotFoundException($"Pet {id} not found");
+        return appointments.Find(a => a.Pet.Id == id).OrderBy(a => a.AppointmentDate)
+            .Select(DtoMapper.Map).ToArray();
+    }
+
+    /// <summary>
+    /// Возвращает владельца питомца
+    /// </summary>
+    /// <param name="id">Идентификатор записи</param>
+    public global::VeterinaryClinic.Application.Contracts.Owners.OwnerDto? OwnerByPet(int id)
+    {
+        var pet = pets.Get(id) ?? throw new KeyNotFoundException($"Pet {id} not found");
+        return pet.Owner is { } o ? DtoMapper.Map(o) : null;
+    }
+    private Owner? ResolveOwner(int? id) => id is int ownerId
+        ? owners.Get(ownerId) ?? throw new ArgumentException("Owner not found") : null;
+    private static void AssignOwner(Pet pet, Owner? owner)
+    {
+        if (!ReferenceEquals(pet.Owner, owner)) { pet.Owner?.Pets.Remove(pet); pet.Owner = owner; }
+        if (owner is not null && !owner.Pets.Contains(pet)) owner.Pets.Add(pet);
+    }
+    private static void Validate(SavePetRequest x)
+    {
+        if (string.IsNullOrWhiteSpace(x.Name) || x.Weight <= 0 || !double.IsFinite(x.Weight) ||
+            x.BirthDate > DateOnly.FromDateTime(DateTime.Today))
+            throw new ArgumentException("Invalid pet");
     }
 }

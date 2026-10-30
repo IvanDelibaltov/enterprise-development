@@ -1,12 +1,14 @@
 using Microsoft.Extensions.DependencyInjection;
 using VeterinaryClinic.Domain.Repositories;
 using VeterinaryClinic.Domain.Models;
-using VeterinaryClinic.Application.Contracts;
 using VeterinaryClinic.Application.Services;
 using VeterinaryClinic.Infrastructure;
 
 namespace VeterinaryClinic.Tests;
 
+/// <summary>
+/// Проверяет работу сервисов клиники
+/// </summary>
 public class ClinicApplicationTests
 {
     private static ServiceProvider CreateProvider()
@@ -18,7 +20,9 @@ public class ClinicApplicationTests
         services.AddScoped<BreedService>();
         services.AddScoped<AppointmentService>();
         services.AddScoped<VeterinarianService>();
-        return services.BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
+        ClinicSeedFactory.SeedClinicTestData(provider);
+        return provider;
     }
 
     [Fact]
@@ -28,7 +32,7 @@ public class ClinicApplicationTests
         var pets = provider.GetRequiredService<PetService>();
         var owners = provider.GetRequiredService<OwnerService>();
         var before = owners.OwnersWithMultiplePets().Select(x => x.Id).ToHashSet();
-        var created = pets.Create( new SavePetRequest("Test", 1, new DateOnly(2020, 1, 1), 2.5, 8));
+        var created = pets.Create(new SavePetRequest("Test", 1, new DateOnly(2020, 1, 1), 2.5, 8));
         Assert.DoesNotContain(8, before);
         Assert.Contains(8, owners.OwnersWithMultiplePets().Select(x => x.Id));
         pets.DeletePet(created.Id);
@@ -60,7 +64,7 @@ public class ClinicApplicationTests
         var pets = provider.GetRequiredService<IRepository<Pet>>();
         var first = owners.Get(1)!;
         var second = owners.Get(2)!;
-        var created = service.Create( new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 1));
+        var created = service.Create(new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 1));
         var pet = pets.Get(created.Id)!;
         Assert.Contains(pet, first.Pets);
 
@@ -81,7 +85,7 @@ public class ClinicApplicationTests
         var service = provider.GetRequiredService<PetService>();
         var owners = provider.GetRequiredService<IRepository<Owner>>();
         var owner = owners.Get(1)!;
-        var created = service.Create( new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 1));
+        var created = service.Create(new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 1));
         Assert.Contains(owner.Pets, pet => pet.Id == created.Id);
         service.DeletePet(created.Id);
         Assert.DoesNotContain(owner.Pets, pet => pet.Id == created.Id);
@@ -171,5 +175,50 @@ public class ClinicApplicationTests
         Assert.Contains(vets.AppointmentsByVeterinarian(appointment.Veterinarian.Id), a => a.Id == appointment.Id);
         Assert.Throws<KeyNotFoundException>(() => pets.AppointmentsByPet(-1));
         Assert.Throws<KeyNotFoundException>(() => vets.AppointmentsByVeterinarian(-1));
+    }
+
+    [Fact]
+    public void SeedContainsTenSpecializationsWithSequentialIds()
+    {
+        using var provider = CreateProvider();
+        var ids = provider.GetRequiredService<IRepository<Specialization>>()
+            .GetAll().Select(x => x.Id).OrderBy(x => x).ToArray();
+        Assert.Equal(Enumerable.Range(1, 10), ids);
+    }
+
+    [Fact]
+    public void HistoricalAppointmentIsRejected()
+    {
+        using var provider = CreateProvider();
+        var service = provider.GetRequiredService<AppointmentService>();
+        Assert.Throws<ArgumentException>(() => service.Create(
+            new SaveAppointmentRequest(1, 1, new DateTime(1999, 1, 1), 101, false)));
+    }
+
+    [Fact]
+    public void DuplicateRoomAndTimeIsRejectedOnCreateAndUpdate()
+    {
+        using var provider = CreateProvider();
+        var service = provider.GetRequiredService<AppointmentService>();
+        var time = DateTime.Today.AddDays(30).AddHours(10);
+        var first = service.Create(new SaveAppointmentRequest(1, 1, time, 909, false));
+        Assert.Throws<InvalidOperationException>(() => service.Create(
+            new SaveAppointmentRequest(1, 1, time, 909, true)));
+        var second = service.Create(new SaveAppointmentRequest(1, 1, time.AddHours(1), 909, false));
+        Assert.Throws<InvalidOperationException>(() => service.Update(second.Id,
+            new SaveAppointmentRequest(1, 1, time, 909, false)));
+        Assert.Equal(first.Id, service.Update(first.Id,
+            new SaveAppointmentRequest(1, 1, time, 909, false)).Id);
+    }
+
+    [Fact]
+    public void ImpossibleVeterinarianExperienceIsRejected()
+    {
+        using var provider = CreateProvider();
+        var service = provider.GetRequiredService<VeterinarianService>();
+        var invalid = new SaveVeterinarianRequest("Test", "Doctor", null, "123", "12345",
+            new DateOnly(2020, 1, 1), 1, 30);
+        Assert.Throws<ArgumentException>(() => service.Create(invalid));
+        Assert.Throws<ArgumentException>(() => service.Update(1, invalid));
     }
 }

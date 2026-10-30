@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using VeterinaryClinic.Application.Contracts;
-using VeterinaryClinic.Application.Services;
 
 namespace VeterinaryClinic.Api.Controllers;
 
@@ -18,9 +16,11 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [EndpointSummary("Get all appointments")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
     public ActionResult<IReadOnlyList<AppointmentDto>> GetAll() => Ok(service.Appointments());
+
     /// <summary>
     /// Получить приём по идентификатору
     /// </summary>
+    /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}")]
     [EndpointSummary("Get appointment by ID")]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status200OK)]
@@ -30,9 +30,11 @@ public sealed class AppointmentController(IAppointmentService service) : Control
         var entity = service.Get(id);
         return entity is null ? NotFound() : Ok(entity);
     }
+
     /// <summary>
     /// Создать приём
     /// </summary>
+    /// <param name="request">Данные запроса</param>
     [HttpPost]
     [EndpointSummary("Create appointment")]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status201Created)]
@@ -42,9 +44,12 @@ public sealed class AppointmentController(IAppointmentService service) : Control
         var entity = service.Create(request);
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
+
     /// <summary>
     /// Обновить приём
     /// </summary>
+    /// <param name="id">Идентификатор записи</param>
+    /// <param name="request">Данные запроса</param>
     [HttpPut("{id:int}")]
     [EndpointSummary("Update appointment")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -52,9 +57,11 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<AppointmentDto> Update(int id, SaveAppointmentRequest request)
         => Ok(service.Update(id, request));
+
     /// <summary>
     /// Удалить приём
     /// </summary>
+    /// <param name="id">Идентификатор записи</param>
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete appointment")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -68,6 +75,7 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     /// <summary>
     /// Получить приёмы за текущий месяц
     /// </summary>
+    /// <param name="roomNumber">Номер кабинета</param>
     [HttpGet("current-month")]
     [EndpointSummary("Get appointments for current month")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
@@ -78,5 +86,4 @@ public sealed class AppointmentController(IAppointmentService service) : Control
 
         return Ok(service.AppointmentsThisMonth(roomNumber, DateTime.Today));
     }
-
 }

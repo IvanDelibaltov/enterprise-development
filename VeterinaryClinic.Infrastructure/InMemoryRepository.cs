@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using VeterinaryClinic.Domain.Repositories;
 
 namespace VeterinaryClinic.Infrastructure;
@@ -11,20 +12,20 @@ public sealed class InMemoryRepository<T>(IEnumerable<T> initial, Func<T, int> i
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult<IReadOnlyList<T>>(_items.ToArray());
     }
-    public Task<IReadOnlyList<T>> FindAsync(Func<T, bool> predicate, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult<IReadOnlyList<T>>(_items.Where(predicate).ToArray());
+        return Task.FromResult<IReadOnlyList<T>>(_items.Where(predicate.Compile()).ToArray());
     }
-    public Task<bool> AnyAsync(Func<T, bool> predicate, CancellationToken cancellationToken = default)
+    public Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(_items.Any(predicate));
+        return Task.FromResult(_items.Any(predicate.Compile()));
     }
-    public Task<int> CountAsync(Func<T, bool> predicate, CancellationToken cancellationToken = default)
+    public Task<int> CountAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(_items.Count(predicate));
+        return Task.FromResult(_items.Count(predicate.Compile()));
     }
     public Task<T?> GetAsync(int id, CancellationToken cancellationToken = default)
     {

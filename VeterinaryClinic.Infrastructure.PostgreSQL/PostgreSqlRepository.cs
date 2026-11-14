@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Domain.Repositories;
@@ -22,15 +23,34 @@ public sealed class PostgreSqlRepository<T>(ClinicDbContext db) : IRepository<T>
         ?? throw new InvalidOperationException("У сущности отсутствует Id"));
 
 
-    private async Task FillOwnerPetsAsync(CancellationToken cancellationToken)
+    private async Task FillOwnerPetsAsync(CancellationToken cancellationToken, int? ownerId = null)
     {
         if (typeof(T) != typeof(Owner)) return;
-        var owners = db.Owners.Local.ToDictionary(x => x.Id);
-        foreach (var owner in owners.Values) owner.Pets.Clear();
-        var pets = await db.Pets.Include(x => x.Owner).Include(x => x.Breed).ToListAsync(cancellationToken);
+
+        var owners = db.Owners.Local
+            .Where(x => ownerId == null || x.Id == ownerId.Value)
+            .ToDictionary(x => x.Id);
+
+        if (owners.Count == 0) return;
+
+        foreach (var owner in owners.Values)
+            owner.Pets.Clear();
+
+        var ownerIds = owners.Keys.ToArray();
+
+        var pets = await db.Pets
+            .Include(x => x.Breed)
+            .Where(x => x.Owner != null && ownerIds.Contains(x.Owner.Id))
+            .ToListAsync(cancellationToken);
+
         foreach (var pet in pets)
-            if (pet.Owner is not null && owners.TryGetValue(pet.Owner.Id, out var owner) && !owner.Pets.Contains(pet))
+        {
+            if (pet.Owner is not null && owners.TryGetValue(pet.Owner.Id, out var owner) &&
+                !owner.Pets.Contains(pet))
+            {
                 owner.Pets.Add(pet);
+            }
+        }
     }
 
     public async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -39,18 +59,36 @@ public sealed class PostgreSqlRepository<T>(ClinicDbContext db) : IRepository<T>
         await FillOwnerPetsAsync(cancellationToken);
         return result;
     }
-    public async Task<IReadOnlyList<T>> FindAsync(Func<T, bool> predicate, CancellationToken cancellationToken = default) =>
-        (await GetAllAsync(cancellationToken)).Where(predicate).ToArray();
-    public async Task<bool> AnyAsync(Func<T, bool> predicate, CancellationToken cancellationToken = default) =>
-        (await GetAllAsync(cancellationToken)).Any(predicate);
-    public async Task<int> CountAsync(Func<T, bool> predicate, CancellationToken cancellationToken = default) =>
-        (await GetAllAsync(cancellationToken)).Count(predicate);
+    public async Task<IReadOnlyList<T>> FindAsync(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        return await Query().Where(predicate).ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> AnyAsync(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        return await db.Set<T>().AnyAsync(predicate, cancellationToken);
+    }
+
+    public async Task<int> CountAsync(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        return await db.Set<T>().CountAsync(predicate, cancellationToken);
+    }
+
     public async Task<T?> GetAsync(int id, CancellationToken cancellationToken = default)
     {
-        var result = await Query().ToListAsync(cancellationToken);
-        await FillOwnerPetsAsync(cancellationToken);
-        return result.FirstOrDefault(x => Id(x) == id);
+        var result = await Query()
+            .FirstOrDefaultAsync(x => EF.Property<int>(x, "Id") == id, cancellationToken);
+
+        await FillOwnerPetsAsync(cancellationToken, id);
+        return result;
     }
+
     public async Task<int> NextIdAsync(CancellationToken cancellationToken = default)
     {
         var entities = await db.Set<T>().ToListAsync(cancellationToken);

@@ -52,7 +52,7 @@ public sealed class OwnerService(IRepository<Owner> owners, IRepository<Pet> pet
 
         var owner = (await owners.GetAsync(id, cancellationToken));
         if (owner is null) return;
-        foreach (var pet in (await pets.FindAsync(p => p.Owner?.Id == id, cancellationToken))) pet.ChangeOwner(null);
+        foreach (var pet in (await pets.FindAsync(p => p.Owner != null && p.Owner.Id == id, cancellationToken))) pet.ChangeOwner(null);
         owner.Pets.Clear();
         await owners.RemoveAsync(id, cancellationToken);
     }
@@ -72,6 +72,6 @@ public sealed class OwnerService(IRepository<Owner> owners, IRepository<Pet> pet
     {
 
         if ((await owners.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Owner {id} not found");
-        return (await pets.FindAsync(p => p.Owner?.Id == id, cancellationToken)).Select(DtoMapper.Map).ToArray();
+        return (await pets.FindAsync(p => p.Owner != null && p.Owner.Id == id, cancellationToken)).Select(DtoMapper.Map).ToArray();
     }
 }

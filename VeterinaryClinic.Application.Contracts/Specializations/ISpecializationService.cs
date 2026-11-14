@@ -6,38 +6,27 @@ namespace VeterinaryClinic.Application.Contracts.Specializations;
 public interface ISpecializationService
 {
     /// <summary>
-    /// Возвращает все специализации
+    /// Возвращает список специализаций ветеринаров.
     /// </summary>
-    public IReadOnlyList<SpecializationDto> Specializations();
-
+    Task<IReadOnlyList<SpecializationDto>> SpecializationsAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает специализацию по идентификатору
+    /// Находит специализацию по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public SpecializationDto? Get(int id);
-
+    Task<SpecializationDto?> GetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Создаёт специализацию
+    /// Создаёт специализацию на основе переданных данных.
     /// </summary>
-    /// <param name="request">Данные запроса</param>
-    public SpecializationDto Create(SaveSpecializationRequest request);
-
+    Task<SpecializationDto> CreateAsync(SaveSpecializationRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Обновляет специализацию по идентификатору
+    /// Обновляет специализацию по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="request">Данные запроса</param>
-    public SpecializationDto Update(int id, SaveSpecializationRequest request);
-
+    Task<SpecializationDto> UpdateAsync(int id, SaveSpecializationRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Удаляет специализацию по идентификатору
+    /// Удаляет специализацию по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeleteSpecialization(int id);
-
+    Task DeleteSpecializationAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает ветеринаров по специализации
+    /// Возвращает ветеринаров заданной специализации.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<VeterinarianDto> VeterinariansBySpecialization(int id);
+    Task<IReadOnlyList<VeterinarianDto>> VeterinariansBySpecializationAsync(int id, CancellationToken cancellationToken = default);
 }

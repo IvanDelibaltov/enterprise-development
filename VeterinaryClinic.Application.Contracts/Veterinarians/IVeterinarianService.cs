@@ -6,50 +6,35 @@ namespace VeterinaryClinic.Application.Contracts.Veterinarians;
 public interface IVeterinarianService
 {
     /// <summary>
-    /// Возвращает всех ветеринаров
+    /// Возвращает список ветеринаров клиники.
     /// </summary>
-    public IReadOnlyList<VeterinarianDto> Veterinarians();
-
+    Task<IReadOnlyList<VeterinarianDto>> VeterinariansAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает ветеринара по идентификатору
+    /// Находит ветеринара по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public VeterinarianDto? Get(int id);
-
+    Task<VeterinarianDto?> GetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Создаёт ветеринара
+    /// Создаёт ветеринара на основе переданных данных.
     /// </summary>
-    /// <param name="request">Данные запроса</param>
-    public VeterinarianDto Create(SaveVeterinarianRequest request);
-
+    Task<VeterinarianDto> CreateAsync(SaveVeterinarianRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Обновляет ветеринара по идентификатору
+    /// Обновляет ветеринара по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="request">Данные запроса</param>
-    public VeterinarianDto Update(int id, SaveVeterinarianRequest request);
-
+    Task<VeterinarianDto> UpdateAsync(int id, SaveVeterinarianRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Удаляет ветеринара по идентификатору
+    /// Удаляет ветеринара по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeleteVeterinarian(int id);
-
+    Task DeleteVeterinarianAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает ветеринаров по виду животного
+    /// Возвращает ветеринаров, работающих с указанным видом животных.
     /// </summary>
-    /// <param name="species">Вид животного</param>
-    public IReadOnlyList<VeterinarianDto> VeterinariansBySpecies(VeterinaryClinic.Domain.Shared.Enums.AnimalType species);
-
+    Task<IReadOnlyList<VeterinarianDto>> VeterinariansBySpeciesAsync(VeterinaryClinic.Domain.Shared.Enums.AnimalType species, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает питомцев ветеринара
+    /// Возвращает животных, обслуживаемых указанным ветеринаром.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<PetDto> PetsByVeterinarian(int id);
-
+    Task<IReadOnlyList<PetDto>> PetsByVeterinarianAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает приёмы ветеринара
+    /// Возвращает записи на приём к указанному ветеринару.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<AppointmentDto> AppointmentsByVeterinarian(int id);
+    Task<IReadOnlyList<AppointmentDto>> AppointmentsByVeterinarianAsync(int id, CancellationToken cancellationToken = default);
 }

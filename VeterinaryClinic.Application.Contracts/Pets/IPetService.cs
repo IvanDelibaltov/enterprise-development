@@ -6,44 +6,31 @@ namespace VeterinaryClinic.Application.Contracts.Pets;
 public interface IPetService
 {
     /// <summary>
-    /// Возвращает всех питомцев
+    /// Возвращает список животных клиники.
     /// </summary>
-    public IReadOnlyList<PetDto> Pets();
-
+    Task<IReadOnlyList<PetDto>> PetsAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает питомца по идентификатору
+    /// Находит животное по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public PetDto? Get(int id);
-
+    Task<PetDto?> GetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Создаёт питомца
+    /// Создаёт животное на основе переданных данных.
     /// </summary>
-    /// <param name="request">Данные запроса</param>
-    public PetDto Create(SavePetRequest request);
-
+    Task<PetDto> CreateAsync(SavePetRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Обновляет питомца по идентификатору
+    /// Обновляет животное по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="request">Данные запроса</param>
-    public PetDto Update(int id, SavePetRequest request);
-
+    Task<PetDto> UpdateAsync(int id, SavePetRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Удаляет питомца по идентификатору
+    /// Удаляет животное по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeletePet(int id);
-
+    Task DeletePetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает владельца питомца
+    /// Возвращает владельца указанного животного.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public OwnerDto? OwnerByPet(int id);
-
+    Task<OwnerDto?> OwnerByPetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает приёмы питомца
+    /// Возвращает записи на приём указанного животного.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<AppointmentDto> AppointmentsByPet(int id);
+    Task<IReadOnlyList<AppointmentDto>> AppointmentsByPetAsync(int id, CancellationToken cancellationToken = default);
 }

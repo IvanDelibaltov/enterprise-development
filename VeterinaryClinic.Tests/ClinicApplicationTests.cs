@@ -11,7 +11,7 @@ namespace VeterinaryClinic.Tests;
 /// </summary>
 public class ClinicApplicationTests
 {
-    private static ServiceProvider CreateProvider()
+    private static async Task<ServiceProvider> CreateProviderAsync()
     {
         var services = new ServiceCollection();
         services.AddClinicRepositories();
@@ -21,204 +21,204 @@ public class ClinicApplicationTests
         services.AddScoped<AppointmentService>();
         services.AddScoped<VeterinarianService>();
         var provider = services.BuildServiceProvider();
-        ClinicSeedFactory.SeedClinicTestData(provider);
+        await ClinicSeedFactory.SeedClinicTestDataAsync(provider);
         return provider;
     }
 
     [Fact]
-    public void CreatedPetAppearsInOwnersAnalyticQuery()
+    public async Task CreatedPetAppearsInOwnersAnalyticQuery()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var pets = provider.GetRequiredService<PetService>();
         var owners = provider.GetRequiredService<OwnerService>();
-        var before = owners.OwnersWithMultiplePets().Select(x => x.Id).ToHashSet();
-        var created = pets.Create(new SavePetRequest("Test", 1, new DateOnly(2020, 1, 1), 2.5, 8));
+        var before = (await owners.OwnersWithMultiplePetsAsync(TestContext.Current.CancellationToken)).Select(x => x.Id).ToHashSet();
+        var created = await pets.CreateAsync(new SavePetRequest("Test", 1, new DateOnly(2020, 1, 1), 2.5, 8), TestContext.Current.CancellationToken);
         Assert.DoesNotContain(8, before);
-        Assert.Contains(8, owners.OwnersWithMultiplePets().Select(x => x.Id));
-        pets.DeletePet(created.Id);
-        Assert.DoesNotContain(8, owners.OwnersWithMultiplePets().Select(x => x.Id));
+        Assert.Contains(8, (await owners.OwnersWithMultiplePetsAsync(TestContext.Current.CancellationToken)).Select(x => x.Id));
+        await pets.DeletePetAsync(created.Id, TestContext.Current.CancellationToken);
+        Assert.DoesNotContain(8, (await owners.OwnersWithMultiplePetsAsync(TestContext.Current.CancellationToken)).Select(x => x.Id));
     }
 
     [Fact]
-    public void InitialOwnersContainTheirPets()
+    public async Task InitialOwnersContainTheirPets()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var owners = provider.GetRequiredService<IRepository<Owner>>();
         var pets = provider.GetRequiredService<IRepository<Pet>>();
-        foreach (var pet in pets.GetAll())
+        foreach (var pet in await pets.GetAllAsync(TestContext.Current.CancellationToken))
         {
             if (pet.Owner is not null)
             {
                 Assert.Contains(pet, pet.Owner.Pets);
-                Assert.Same(owners.Get(pet.Owner.Id), pet.Owner);
+                Assert.Same(await owners.GetAsync(pet.Owner.Id, TestContext.Current.CancellationToken), pet.Owner);
             }
         }
     }
 
     [Fact]
-    public void CreatingAndReassigningPetUpdatesBothOwners()
+    public async Task CreatingAndReassigningPetUpdatesBothOwners()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var service = provider.GetRequiredService<PetService>();
         var owners = provider.GetRequiredService<IRepository<Owner>>();
         var pets = provider.GetRequiredService<IRepository<Pet>>();
-        var first = owners.Get(1)!;
-        var second = owners.Get(2)!;
-        var created = service.Create(new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 1));
-        var pet = pets.Get(created.Id)!;
+        var first = (await owners.GetAsync(1, TestContext.Current.CancellationToken))!;
+        var second = (await owners.GetAsync(2, TestContext.Current.CancellationToken))!;
+        var created = await service.CreateAsync(new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 1), TestContext.Current.CancellationToken);
+        var pet = (await pets.GetAsync(created.Id, TestContext.Current.CancellationToken))!;
         Assert.Contains(pet, first.Pets);
 
-        service.Update(created.Id, new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 2));
+        await service.UpdateAsync(created.Id, new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 2), TestContext.Current.CancellationToken);
         Assert.DoesNotContain(pet, first.Pets);
         Assert.Contains(pet, second.Pets);
         Assert.Same(second, pet.Owner);
 
-        service.Update(created.Id, new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, null));
+        await service.UpdateAsync(created.Id, new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, null), TestContext.Current.CancellationToken);
         Assert.DoesNotContain(pet, second.Pets);
         Assert.Null(pet.Owner);
     }
 
     [Fact]
-    public void DeletingPetRemovesItFromOwnerCollection()
+    public async Task DeletingPetRemovesItFromOwnerCollection()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var service = provider.GetRequiredService<PetService>();
         var owners = provider.GetRequiredService<IRepository<Owner>>();
-        var owner = owners.Get(1)!;
-        var created = service.Create(new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 1));
+        var owner = (await owners.GetAsync(1, TestContext.Current.CancellationToken))!;
+        var created = await service.CreateAsync(new SavePetRequest("New pet", 1, new DateOnly(2022, 1, 1), 3.5, 1), TestContext.Current.CancellationToken);
         Assert.Contains(owner.Pets, pet => pet.Id == created.Id);
-        service.DeletePet(created.Id);
+        await service.DeletePetAsync(created.Id, TestContext.Current.CancellationToken);
         Assert.DoesNotContain(owner.Pets, pet => pet.Id == created.Id);
     }
 
     [Fact]
-    public void DeletingOwnerUnlinksTheirPets()
+    public async Task DeletingOwnerUnlinksTheirPets()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var service = provider.GetRequiredService<OwnerService>();
         var owners = provider.GetRequiredService<IRepository<Owner>>();
         var pets = provider.GetRequiredService<IRepository<Pet>>();
-        var owner = owners.Get(1)!;
-        var relatedPets = pets.GetAll().Where(pet => pet.Owner?.Id == 1).ToArray();
+        var owner = (await owners.GetAsync(1, TestContext.Current.CancellationToken))!;
+        var relatedPets = (await pets.GetAllAsync(TestContext.Current.CancellationToken)).Where(pet => pet.Owner?.Id == 1).ToArray();
         Assert.NotEmpty(relatedPets);
-        service.DeleteOwner(1);
+        await service.DeleteOwnerAsync(1, TestContext.Current.CancellationToken);
         Assert.Empty(owner.Pets);
         Assert.All(relatedPets, pet => Assert.Null(pet.Owner));
-        Assert.Null(owners.Get(1));
+        Assert.Null(await owners.GetAsync(1, TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public void InvalidOwnerIsRejected()
+    public async Task InvalidOwnerIsRejected()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var pets = provider.GetRequiredService<PetService>();
-        Assert.Throws<ArgumentException>(() => pets.Create(
-            new SavePetRequest("Test", 1, new DateOnly(2020, 1, 1), 2.5, 99999)));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await pets.CreateAsync(
+            new SavePetRequest("Test", 1, new DateOnly(2020, 1, 1), 2.5, 99999), TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public void ChangingSpeciesOfUsedBreedIsRejected()
+    public async Task ChangingSpeciesOfUsedBreedIsRejected()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var breeds = provider.GetRequiredService<BreedService>();
-        var existing = breeds.Breeds().First(x => x.Id == 1);
+        var existing = (await breeds.BreedsAsync(TestContext.Current.CancellationToken)).First(x => x.Id == 1);
         var different = Enum.GetValues<VeterinaryClinic.Domain.Shared.Enums.AnimalType>()
             .First(x => x != existing.AnimalType);
-        Assert.Throws<InvalidOperationException>(() => breeds.Update(1,
-            new SaveBreedRequest(existing.Name, different)));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await breeds.UpdateAsync(1,
+            new SaveBreedRequest(existing.Name, different), TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public void PetBreedChangeRejectsIncompatibleExistingAppointment()
+    public async Task PetBreedChangeRejectsIncompatibleExistingAppointment()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var appointments = provider.GetRequiredService<IRepository<Appointment>>();
         var pets = provider.GetRequiredService<PetService>();
         var breeds = provider.GetRequiredService<IRepository<Breed>>();
-        var appointment = appointments.GetAll().First();
+        var appointment = (await appointments.GetAllAsync(TestContext.Current.CancellationToken)).First();
         var pet = appointment.Pet;
-        var incompatible = breeds.GetAll().First(b
+        var incompatible = (await breeds.GetAllAsync(TestContext.Current.CancellationToken)).First(b
             => b.AnimalType != appointment.Veterinarian.Specialization.AnimalType);
         var originalBreed = pet.Breed;
 
-        Assert.Throws<InvalidOperationException>(() => pets.Update(pet.Id,
-            new SavePetRequest(pet.Name, incompatible.Id, pet.BirthDate, pet.Weight, pet.Owner?.Id)));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await pets.UpdateAsync(pet.Id,
+            new SavePetRequest(pet.Name, incompatible.Id, pet.BirthDate, pet.Weight, pet.Owner?.Id), TestContext.Current.CancellationToken));
         Assert.Same(originalBreed, pet.Breed);
     }
 
     [Fact]
-    public void VeterinarianSpecializationChangeRejectsIncompatibleExistingAppointment()
+    public async Task VeterinarianSpecializationChangeRejectsIncompatibleExistingAppointment()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var appointments = provider.GetRequiredService<IRepository<Appointment>>();
         var veterinarians = provider.GetRequiredService<VeterinarianService>();
         var specializations = provider.GetRequiredService<IRepository<Specialization>>();
-        var appointment = appointments.GetAll().First();
+        var appointment = (await appointments.GetAllAsync(TestContext.Current.CancellationToken)).First();
         var vet = appointment.Veterinarian;
-        var incompatible = specializations.GetAll().First(s => s.AnimalType != appointment.Pet.Breed.AnimalType);
+        var incompatible = (await specializations.GetAllAsync(TestContext.Current.CancellationToken)).First(s => s.AnimalType != appointment.Pet.Breed.AnimalType);
         var original = vet.Specialization;
 
-        Assert.Throws<InvalidOperationException>(() => veterinarians.Update(vet.Id,
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await veterinarians.UpdateAsync(vet.Id,
             new SaveVeterinarianRequest(vet.LastName, vet.FirstName, vet.Patronymic, vet.Phone,
-                vet.PassportNumber, vet.BirthDate, incompatible.Id, vet.ExperienceYears)));
+                vet.PassportNumber, vet.BirthDate, incompatible.Id, vet.ExperienceYears), TestContext.Current.CancellationToken));
         Assert.Same(original, vet.Specialization);
     }
 
     [Fact]
-    public void AppointmentRelationsAreAvailableFromBothSides()
+    public async Task AppointmentRelationsAreAvailableFromBothSides()
     {
-        using var provider = CreateProvider();
-        var appointment = provider.GetRequiredService<IRepository<Appointment>>().GetAll().First();
+        using var provider = await CreateProviderAsync();
+        var appointment = (await provider.GetRequiredService<IRepository<Appointment>>().GetAllAsync(TestContext.Current.CancellationToken)).First();
         var pets = provider.GetRequiredService<PetService>();
         var vets = provider.GetRequiredService<VeterinarianService>();
-        Assert.Contains(pets.AppointmentsByPet(appointment.Pet.Id), a => a.Id == appointment.Id);
-        Assert.Contains(vets.AppointmentsByVeterinarian(appointment.Veterinarian.Id), a => a.Id == appointment.Id);
-        Assert.Throws<KeyNotFoundException>(() => pets.AppointmentsByPet(-1));
-        Assert.Throws<KeyNotFoundException>(() => vets.AppointmentsByVeterinarian(-1));
+        Assert.Contains(await pets.AppointmentsByPetAsync(appointment.Pet.Id, TestContext.Current.CancellationToken), a => a.Id == appointment.Id);
+        Assert.Contains(await vets.AppointmentsByVeterinarianAsync(appointment.Veterinarian.Id, TestContext.Current.CancellationToken), a => a.Id == appointment.Id);
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await pets.AppointmentsByPetAsync(-1, TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await vets.AppointmentsByVeterinarianAsync(-1, TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public void SeedContainsTenSpecializationsWithSequentialIds()
+    public async Task SeedContainsTenSpecializationsWithSequentialIds()
     {
-        using var provider = CreateProvider();
-        var ids = provider.GetRequiredService<IRepository<Specialization>>()
-            .GetAll().Select(x => x.Id).OrderBy(x => x).ToArray();
+        using var provider = await CreateProviderAsync();
+        var ids = (await provider.GetRequiredService<IRepository<Specialization>>()
+            .GetAllAsync(TestContext.Current.CancellationToken)).Select(x => x.Id).OrderBy(x => x).ToArray();
         Assert.Equal(Enumerable.Range(1, 10), ids);
     }
 
     [Fact]
-    public void HistoricalAppointmentIsRejected()
+    public async Task HistoricalAppointmentIsRejected()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var service = provider.GetRequiredService<AppointmentService>();
-        Assert.Throws<ArgumentException>(() => service.Create(
-            new SaveAppointmentRequest(1, 1, new DateTime(1999, 1, 1), 101, false)));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await service.CreateAsync(
+            new SaveAppointmentRequest(1, 1, new DateTime(1999, 1, 1), 101, false), TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public void DuplicateRoomAndTimeIsRejectedOnCreateAndUpdate()
+    public async Task DuplicateRoomAndTimeIsRejectedOnCreateAndUpdate()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var service = provider.GetRequiredService<AppointmentService>();
         var time = DateTime.Today.AddDays(30).AddHours(10);
-        var first = service.Create(new SaveAppointmentRequest(1, 1, time, 909, false));
-        Assert.Throws<InvalidOperationException>(() => service.Create(
-            new SaveAppointmentRequest(1, 1, time, 909, true)));
-        var second = service.Create(new SaveAppointmentRequest(1, 1, time.AddHours(1), 909, false));
-        Assert.Throws<InvalidOperationException>(() => service.Update(second.Id,
-            new SaveAppointmentRequest(1, 1, time, 909, false)));
-        Assert.Equal(first.Id, service.Update(first.Id,
-            new SaveAppointmentRequest(1, 1, time, 909, false)).Id);
+        var first = await service.CreateAsync(new SaveAppointmentRequest(1, 1, time, 909, false), TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await service.CreateAsync(
+            new SaveAppointmentRequest(1, 1, time, 909, true), TestContext.Current.CancellationToken));
+        var second = await service.CreateAsync(new SaveAppointmentRequest(1, 1, time.AddHours(1), 909, false), TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await service.UpdateAsync(second.Id,
+            new SaveAppointmentRequest(1, 1, time, 909, false), TestContext.Current.CancellationToken));
+        Assert.Equal(first.Id, (await service.UpdateAsync(first.Id,
+            new SaveAppointmentRequest(1, 1, time, 909, false), TestContext.Current.CancellationToken)).Id);
     }
 
     [Fact]
-    public void ImpossibleVeterinarianExperienceIsRejected()
+    public async Task ImpossibleVeterinarianExperienceIsRejected()
     {
-        using var provider = CreateProvider();
+        using var provider = await CreateProviderAsync();
         var service = provider.GetRequiredService<VeterinarianService>();
         var invalid = new SaveVeterinarianRequest("Test", "Doctor", null, "123", "12345",
             new DateOnly(2020, 1, 1), 1, 30);
-        Assert.Throws<ArgumentException>(() => service.Create(invalid));
-        Assert.Throws<ArgumentException>(() => service.Update(1, invalid));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await service.CreateAsync(invalid, TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await service.UpdateAsync(1, invalid, TestContext.Current.CancellationToken));
     }
 }

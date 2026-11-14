@@ -9,26 +9,27 @@ namespace VeterinaryClinic.Application.Services;
 /// </summary>
 public sealed class VeterinarianService(IRepository<Veterinarian> veterinarians, IRepository<Specialization> specializations, IRepository<Appointment> appointments) : IVeterinarianService
 {
-    /// <summary>
-    /// Возвращает всех ветеринаров
-    /// </summary>
-    public IReadOnlyList<VeterinarianDto> Veterinarians() => veterinarians.GetAll().Select(DtoMapper.Map).ToArray();
-
-    /// <summary>
-    /// Находит ветеринара
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public VeterinarianDto? Get(int id) => veterinarians.Get(id) is { } v ? DtoMapper.Map(v) : null;
-
-    /// <summary>
-    /// Создаёт ветеринара с проверкой возраста и стажа
-    /// </summary>
-    /// <param name="x">Данные для сохранения</param>
-    public VeterinarianDto Create(SaveVeterinarianRequest x)
+    private static void Validate(SaveVeterinarianRequest x)
     {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var age = today.Year - x.BirthDate.Year;
+        if (x.BirthDate > today.AddYears(-age)) age--;
+        if (string.IsNullOrWhiteSpace(x.FirstName) || string.IsNullOrWhiteSpace(x.LastName) ||
+            string.IsNullOrWhiteSpace(x.PassportNumber) || x.BirthDate == default ||
+            x.BirthDate > today || age < 18 || x.ExperienceYears < 0 || x.ExperienceYears > age - 18)
+            throw new ArgumentException("Invalid veterinarian age or experience");
+    }
+
+    public async Task<IReadOnlyList<VeterinarianDto>> VeterinariansAsync(CancellationToken cancellationToken = default) => (await veterinarians.GetAllAsync(cancellationToken)).Select(DtoMapper.Map).ToArray();
+
+    public async Task<VeterinarianDto?> GetAsync(int id, CancellationToken cancellationToken = default) => (await veterinarians.GetAsync(id, cancellationToken)) is { } v ? DtoMapper.Map(v) : null;
+
+    public async Task<VeterinarianDto> CreateAsync(SaveVeterinarianRequest x, CancellationToken cancellationToken = default)
+    {
+
         Validate(x);
-        var spec = specializations.Get(x.SpecializationId) ?? throw new ArgumentException("Specialization not found");
-        return DtoMapper.Map(veterinarians.Create(id => new Veterinarian
+        var spec = (await specializations.GetAsync(x.SpecializationId, cancellationToken)) ?? throw new ArgumentException("Specialization not found");
+        return DtoMapper.Map((await veterinarians.CreateAsync(id => new Veterinarian
         {
             Id = id,
             Specialization = spec,
@@ -39,21 +40,18 @@ public sealed class VeterinarianService(IRepository<Veterinarian> veterinarians,
             PassportNumber = x.PassportNumber,
             BirthDate = x.BirthDate,
             ExperienceYears = x.ExperienceYears
-        }));
+        }, cancellationToken)));
     }
 
-    /// <summary>
-    /// Обновляет ветеринара с проверкой совместимости существующих приёмов
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="x">Данные для сохранения</param>
-    public VeterinarianDto Update(int id, SaveVeterinarianRequest x)
+
+    public async Task<VeterinarianDto> UpdateAsync(int id, SaveVeterinarianRequest x, CancellationToken cancellationToken = default)
     {
+
         Validate(x);
-        var spec = specializations.Get(x.SpecializationId) ?? throw new ArgumentException("Specialization not found");
-        if (appointments.Any(a => a.Veterinarian.Id == id && a.Pet.Breed.AnimalType != spec.AnimalType))
+        var spec = (await specializations.GetAsync(x.SpecializationId, cancellationToken)) ?? throw new ArgumentException("Specialization not found");
+        if ((await appointments.AnyAsync(a => a.Veterinarian.Id == id && a.Pet.Breed.AnimalType != spec.AnimalType, cancellationToken)))
             throw new InvalidOperationException("Specialization is incompatible with existing appointments");
-        return DtoMapper.Map(veterinarians.Update(id, v =>
+        return DtoMapper.Map((await veterinarians.UpdateAsync(id, v =>
         {
             v.FirstName = x.FirstName;
             v.LastName = x.LastName;
@@ -63,56 +61,35 @@ public sealed class VeterinarianService(IRepository<Veterinarian> veterinarians,
             v.BirthDate = x.BirthDate;
             v.Specialization = spec;
             v.ExperienceYears = x.ExperienceYears;
-        }));
+        }, cancellationToken)));
     }
 
-    /// <summary>
-    /// Удаляет ветеринара без приёмов
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeleteVeterinarian(int id)
+
+    public async Task DeleteVeterinarianAsync(int id, CancellationToken cancellationToken = default)
     {
-        if (appointments.Any(a => a.Veterinarian.Id == id))
+
+        if ((await appointments.AnyAsync(a => a.Veterinarian.Id == id, cancellationToken)))
             throw new InvalidOperationException("Veterinarian has appointments");
-        veterinarians.Remove(id);
+        await veterinarians.RemoveAsync(id, cancellationToken);
     }
 
-    /// <summary>
-    /// Возвращает ветеринаров по виду животных
-    /// </summary>
-    /// <param name="species">Вид животного</param>
-    public IReadOnlyList<VeterinarianDto> VeterinariansBySpecies(AnimalType species) =>
-        veterinarians.Find(v => v.Specialization.AnimalType == species).Select(DtoMapper.Map).ToArray();
 
-    /// <summary>
-    /// Возвращает приёмы ветеринара
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<AppointmentDto> AppointmentsByVeterinarian(int id)
+    public async Task<IReadOnlyList<VeterinarianDto>> VeterinariansBySpeciesAsync(AnimalType species, CancellationToken cancellationToken = default) => (await veterinarians.FindAsync(v => v.Specialization.AnimalType == species, cancellationToken)).Select(DtoMapper.Map).ToArray();
+
+    public async Task<IReadOnlyList<AppointmentDto>> AppointmentsByVeterinarianAsync(int id, CancellationToken cancellationToken = default)
     {
-        if (veterinarians.Get(id) is null) throw new KeyNotFoundException($"Veterinarian {id} not found");
-        return appointments.Find(a => a.Veterinarian.Id == id).OrderBy(a => a.AppointmentDate)
+
+        if ((await veterinarians.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Veterinarian {id} not found");
+        return (await appointments.FindAsync(a => a.Veterinarian.Id == id, cancellationToken)).OrderBy(a => a.AppointmentDate)
             .Select(DtoMapper.Map).ToArray();
     }
 
-    /// <summary>
-    /// Возвращает питомцев ветеринара без повторений
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<PetDto> PetsByVeterinarian(int id)
+
+    public async Task<IReadOnlyList<PetDto>> PetsByVeterinarianAsync(int id, CancellationToken cancellationToken = default)
     {
-        if (veterinarians.Get(id) is null) throw new KeyNotFoundException($"Veterinarian {id} not found");
-        return appointments.Find(a => a.Veterinarian.Id == id).Select(a => a.Pet)
+
+        if ((await veterinarians.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Veterinarian {id} not found");
+        return (await appointments.FindAsync(a => a.Veterinarian.Id == id, cancellationToken)).Select(a => a.Pet)
             .DistinctBy(p => p.Id).OrderBy(p => p.Name).Select(DtoMapper.Map).ToArray();
-    }
-    private static void Validate(SaveVeterinarianRequest x)
-    {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var age = today.Year - x.BirthDate.Year;
-        if (x.BirthDate > today.AddYears(-age)) age--;
-        if (string.IsNullOrWhiteSpace(x.FirstName) || string.IsNullOrWhiteSpace(x.LastName) ||
-            string.IsNullOrWhiteSpace(x.PassportNumber) || x.BirthDate == default ||
-            x.BirthDate > today || age < 18 || x.ExperienceYears < 0 || x.ExperienceYears > age - 18)
-            throw new ArgumentException("Invalid veterinarian age or experience");
     }
 }

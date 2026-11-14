@@ -8,73 +8,57 @@ namespace VeterinaryClinic.Application.Services;
 /// </summary>
 public sealed class SpecializationService(IRepository<Specialization> specializations, IRepository<Veterinarian> veterinarians) : ISpecializationService
 {
-    /// <summary>
-    /// Возвращает все специализации
-    /// </summary>
-    public IReadOnlyList<SpecializationDto> Specializations() => specializations.GetAll().Select(DtoMapper.Map).ToArray();
-
-    /// <summary>
-    /// Находит специализацию
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public SpecializationDto? Get(int id) => specializations.Get(id) is { } s ? DtoMapper.Map(s) : null;
-
-    /// <summary>
-    /// Создаёт специализацию с уникальной парой названия и вида животных
-    /// </summary>
-    /// <param name="x">Данные для сохранения</param>
-    public SpecializationDto Create(SaveSpecializationRequest x)
-    {
-        Validate(x);
-        EnsureUnique(x, null);
-        return DtoMapper.Map(specializations.Create(id => new Specialization
-        { Id = id, Name = x.Name.Trim(), AnimalType = x.AnimalType }));
-    }
-
-    /// <summary>
-    /// Обновляет специализацию
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="x">Данные для сохранения</param>
-    public SpecializationDto Update(int id, SaveSpecializationRequest x)
-    {
-        Validate(x);
-        var current = specializations.Get(id) ?? throw new KeyNotFoundException($"Specialization {id} not found");
-        EnsureUnique(x, id);
-        if (current.AnimalType != x.AnimalType && veterinarians.Any(v => v.Specialization.Id == id))
-            throw new InvalidOperationException("Cannot change species of a specialization in use");
-        return DtoMapper.Map(specializations.Update(id, s => { s.Name = x.Name.Trim(); s.AnimalType = x.AnimalType; }));
-    }
-
-    /// <summary>
-    /// Удаляет неиспользуемую специализацию
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeleteSpecialization(int id)
-    {
-        if (veterinarians.Any(v => v.Specialization.Id == id))
-            throw new InvalidOperationException("Specialization is in use");
-        specializations.Remove(id);
-    }
-
-    /// <summary>
-    /// Возвращает ветеринаров по специализации
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<VeterinarianDto> VeterinariansBySpecialization(int id)
-    {
-        if (specializations.Get(id) is null) throw new KeyNotFoundException($"Specialization {id} not found");
-        return veterinarians.Find(v => v.Specialization.Id == id).Select(DtoMapper.Map).ToArray();
-    }
     private static void Validate(SaveSpecializationRequest x)
     {
         if (string.IsNullOrWhiteSpace(x.Name) || !Enum.IsDefined(x.AnimalType))
             throw new ArgumentException("Invalid specialization");
     }
-    private void EnsureUnique(SaveSpecializationRequest x, int? exceptId)
+    public async Task<IReadOnlyList<SpecializationDto>> SpecializationsAsync(CancellationToken cancellationToken = default) => (await specializations.GetAllAsync(cancellationToken)).Select(DtoMapper.Map).ToArray();
+
+    public async Task<SpecializationDto?> GetAsync(int id, CancellationToken cancellationToken = default) => (await specializations.GetAsync(id, cancellationToken)) is { } s ? DtoMapper.Map(s) : null;
+
+    public async Task<SpecializationDto> CreateAsync(SaveSpecializationRequest x, CancellationToken cancellationToken = default)
     {
-        if (specializations.Any(s => s.Id != exceptId && s.AnimalType == x.AnimalType &&
-            string.Equals(s.Name, x.Name.Trim(), StringComparison.OrdinalIgnoreCase)))
+
+        Validate(x);
+        await EnsureUniqueAsync(x, null, cancellationToken);
+        return DtoMapper.Map((await specializations.CreateAsync(id => new Specialization
+        { Id = id, Name = x.Name.Trim(), AnimalType = x.AnimalType }, cancellationToken)));
+    }
+
+
+    public async Task<SpecializationDto> UpdateAsync(int id, SaveSpecializationRequest x, CancellationToken cancellationToken = default)
+    {
+
+        Validate(x);
+        var current = (await specializations.GetAsync(id, cancellationToken)) ?? throw new KeyNotFoundException($"Specialization {id} not found");
+        await EnsureUniqueAsync(x, id, cancellationToken);
+        if (current.AnimalType != x.AnimalType && (await veterinarians.AnyAsync(v => v.Specialization.Id == id, cancellationToken)))
+            throw new InvalidOperationException("Cannot change species of a specialization in use");
+        return DtoMapper.Map((await specializations.UpdateAsync(id, s => { s.Name = x.Name.Trim(); s.AnimalType = x.AnimalType; }, cancellationToken)));
+    }
+
+
+    public async Task DeleteSpecializationAsync(int id, CancellationToken cancellationToken = default)
+    {
+
+        if ((await veterinarians.AnyAsync(v => v.Specialization.Id == id, cancellationToken)))
+            throw new InvalidOperationException("Specialization is in use");
+        await specializations.RemoveAsync(id, cancellationToken);
+    }
+
+
+    public async Task<IReadOnlyList<VeterinarianDto>> VeterinariansBySpecializationAsync(int id, CancellationToken cancellationToken = default)
+    {
+
+        if ((await specializations.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Specialization {id} not found");
+        return (await veterinarians.FindAsync(v => v.Specialization.Id == id, cancellationToken)).Select(DtoMapper.Map).ToArray();
+    }
+
+    private async Task EnsureUniqueAsync(SaveSpecializationRequest x, int? exceptId, CancellationToken cancellationToken)
+    {
+        if (await specializations.AnyAsync(s => s.Id != exceptId && s.AnimalType == x.AnimalType &&
+            string.Equals(s.Name, x.Name.Trim(), StringComparison.OrdinalIgnoreCase), cancellationToken))
             throw new InvalidOperationException("Specialization already exists");
     }
 }

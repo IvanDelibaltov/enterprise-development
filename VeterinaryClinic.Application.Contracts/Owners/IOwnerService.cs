@@ -6,43 +6,31 @@ namespace VeterinaryClinic.Application.Contracts.Owners;
 public interface IOwnerService
 {
     /// <summary>
-    /// Возвращает всех владельцев
+    /// Возвращает список владельцев животных.
     /// </summary>
-    public IReadOnlyList<OwnerDto> Owners();
-
+    Task<IReadOnlyList<OwnerDto>> OwnersAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает владельца по идентификатору
+    /// Находит владельца по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public OwnerDto? Get(int id);
-
+    Task<OwnerDto?> GetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Создаёт владельца
+    /// Создаёт владельца на основе переданных данных.
     /// </summary>
-    /// <param name="request">Данные запроса</param>
-    public OwnerDto Create(SaveOwnerRequest request);
-
+    Task<OwnerDto> CreateAsync(SaveOwnerRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Обновляет владельца по идентификатору
+    /// Обновляет владельца по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="request">Данные запроса</param>
-    public OwnerDto Update(int id, SaveOwnerRequest request);
-
+    Task<OwnerDto> UpdateAsync(int id, SaveOwnerRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Удаляет владельца по идентификатору
+    /// Удаляет владельца по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeleteOwner(int id);
-
+    Task DeleteOwnerAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает владельцев нескольких питомцев
+    /// Возвращает владельцев, у которых зарегистрировано несколько животных.
     /// </summary>
-    public IReadOnlyList<OwnerDto> OwnersWithMultiplePets();
-
+    Task<IReadOnlyList<OwnerDto>> OwnersWithMultiplePetsAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает питомцев владельца
+    /// Возвращает животных указанного владельца.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<PetDto> PetsByOwner(int id);
+    Task<IReadOnlyList<PetDto>> PetsByOwnerAsync(int id, CancellationToken cancellationToken = default);
 }

@@ -6,44 +6,31 @@ namespace VeterinaryClinic.Application.Contracts.Breeds;
 public interface IBreedService
 {
     /// <summary>
-    /// Возвращает все породы
+    /// Возвращает список пород животных.
     /// </summary>
-    public IReadOnlyList<BreedDto> Breeds();
-
+    Task<IReadOnlyList<BreedDto>> BreedsAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает породу по идентификатору
+    /// Находит породу по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public BreedDto? Get(int id);
-
+    Task<BreedDto?> GetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Создаёт породу
+    /// Создаёт породу на основе переданных данных.
     /// </summary>
-    /// <param name="request">Данные запроса</param>
-    public BreedDto Create(SaveBreedRequest request);
-
+    Task<BreedDto> CreateAsync(SaveBreedRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Обновляет породу по идентификатору
+    /// Обновляет породу по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="request">Данные запроса</param>
-    public BreedDto Update(int id, SaveBreedRequest request);
-
+    Task<BreedDto> UpdateAsync(int id, SaveBreedRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Удаляет породу по идентификатору
+    /// Удаляет породу по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeleteBreed(int id);
-
+    Task DeleteBreedAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Считает повторные приёмы по породе
+    /// Подсчитывает повторные приёмы животных указанной породы.
     /// </summary>
-    /// <param name="breedId">Идентификатор породы</param>
-    public int RepeatedAppointments(int breedId);
-
+    Task<int> RepeatedAppointmentsAsync(int breedId, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает питомцев по породе
+    /// Возвращает животных указанной породы.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<PetDto> PetsByBreed(int id);
+    Task<IReadOnlyList<PetDto>> PetsByBreedAsync(int id, CancellationToken cancellationToken = default);
 }

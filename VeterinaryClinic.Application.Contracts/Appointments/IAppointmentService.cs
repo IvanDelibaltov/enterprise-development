@@ -6,39 +6,27 @@ namespace VeterinaryClinic.Application.Contracts.Appointments;
 public interface IAppointmentService
 {
     /// <summary>
-    /// Возвращает все приёмы
+    /// Возвращает все записи на приём.
     /// </summary>
-    public IReadOnlyList<AppointmentDto> Appointments();
-
+    Task<IReadOnlyList<AppointmentDto>> AppointmentsAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает приём по идентификатору
+    /// Находит приём по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public AppointmentDto? Get(int id);
-
+    Task<AppointmentDto?> GetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Создаёт приём
+    /// Создаёт приём на основе переданных данных.
     /// </summary>
-    /// <param name="request">Данные запроса</param>
-    public AppointmentDto Create(SaveAppointmentRequest request);
-
+    Task<AppointmentDto> CreateAsync(SaveAppointmentRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Обновляет приём по идентификатору
+    /// Обновляет приём по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="request">Данные запроса</param>
-    public AppointmentDto Update(int id, SaveAppointmentRequest request);
-
+    Task<AppointmentDto> UpdateAsync(int id, SaveAppointmentRequest request, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Удаляет приём по идентификатору
+    /// Удаляет приём по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeleteAppointment(int id);
-
+    Task DeleteAppointmentAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Возвращает приёмы за месяц по кабинету
+    /// Возвращает записи на приём за указанный месяц и для заданного кабинета.
     /// </summary>
-    /// <param name="room">Номер кабинета</param>
-    /// <param name="today">Дата, относительно которой выполняется выборка</param>
-    public IReadOnlyList<AppointmentDto> AppointmentsThisMonth(int room, DateTime today);
+    Task<IReadOnlyList<AppointmentDto>> AppointmentsThisMonthAsync(int room, DateTime today, CancellationToken cancellationToken = default);
 }

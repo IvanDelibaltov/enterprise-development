@@ -16,7 +16,7 @@ public sealed class VeterinarianController(IVeterinarianService service) : Contr
     [HttpGet]
     [EndpointSummary("Получить всех ветеринаров")]
     [ProducesResponseType(typeof(IReadOnlyList<VeterinarianDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<VeterinarianDto>> GetAll() => Ok(service.Veterinarians());
+    public async Task<ActionResult<IReadOnlyList<VeterinarianDto>>> GetAll() => Ok((await service.VeterinariansAsync(HttpContext.RequestAborted)));
 
     /// <summary>
     /// Получить ветеринара по идентификатору
@@ -26,9 +26,9 @@ public sealed class VeterinarianController(IVeterinarianService service) : Contr
     [EndpointSummary("Получить ветеринара по идентификатору")]
     [ProducesResponseType(typeof(VeterinarianDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<VeterinarianDto> Get(int id)
+    public async Task<ActionResult<VeterinarianDto>> Get(int id)
     {
-        var entity = service.Get(id);
+        var entity = (await service.GetAsync(id, HttpContext.RequestAborted));
         return entity is null ? NotFound() : Ok(entity);
     }
 
@@ -40,9 +40,9 @@ public sealed class VeterinarianController(IVeterinarianService service) : Contr
     [EndpointSummary("Создать ветеринара")]
     [ProducesResponseType(typeof(VeterinarianDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<VeterinarianDto> Create(SaveVeterinarianRequest request)
+    public async Task<ActionResult<VeterinarianDto>> Create(SaveVeterinarianRequest request)
     {
-        var entity = service.Create(request);
+        var entity = (await service.CreateAsync(request, HttpContext.RequestAborted));
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
 
@@ -56,8 +56,8 @@ public sealed class VeterinarianController(IVeterinarianService service) : Contr
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(VeterinarianDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<VeterinarianDto> Update(int id, SaveVeterinarianRequest request)
-        => Ok(service.Update(id, request));
+    public async Task<ActionResult<VeterinarianDto>> Update(int id, SaveVeterinarianRequest request)
+        => Ok((await service.UpdateAsync(id, request, HttpContext.RequestAborted)));
 
     /// <summary>
     /// Удалить ветеринара
@@ -67,9 +67,9 @@ public sealed class VeterinarianController(IVeterinarianService service) : Contr
     [EndpointSummary("Удалить ветеринара")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        service.DeleteVeterinarian(id);
+        await service.DeleteVeterinarianAsync(id, HttpContext.RequestAborted);
         return NoContent();
     }
 
@@ -80,8 +80,8 @@ public sealed class VeterinarianController(IVeterinarianService service) : Contr
     [HttpGet("by-species/{species}")]
     [EndpointSummary("Получить ветеринаров по виду животного")]
     [ProducesResponseType(typeof(IReadOnlyList<VeterinarianDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<VeterinarianDto>> BySpecies(AnimalType species)
-        => Ok(service.VeterinariansBySpecies(species));
+    public async Task<ActionResult<IReadOnlyList<VeterinarianDto>>> BySpecies(AnimalType species)
+        => Ok((await service.VeterinariansBySpeciesAsync(species, HttpContext.RequestAborted)));
 
     /// <summary>
     /// Получить приёмы ветеринара
@@ -91,8 +91,8 @@ public sealed class VeterinarianController(IVeterinarianService service) : Contr
     [EndpointSummary("Получить приёмы ветеринара")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<IReadOnlyList<AppointmentDto>> GetAppointments(int id) =>
-        Ok(service.AppointmentsByVeterinarian(id));
+    public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> GetAppointments(int id) =>
+        Ok((await service.AppointmentsByVeterinarianAsync(id, HttpContext.RequestAborted)));
 
     /// <summary>
     /// Возвращает питомцев ветеринара без повторов
@@ -101,6 +101,6 @@ public sealed class VeterinarianController(IVeterinarianService service) : Contr
     [HttpGet("{id:int}/pets")]
     [EndpointSummary("Получить питомцев ветеринара")]
     [ProducesResponseType(typeof(IReadOnlyList<PetDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<PetDto>> PetsByDoctor(int id) => service.Get(id) is not null
-        ? Ok(service.PetsByVeterinarian(id)) : NotFound();
+    public async Task<ActionResult<IReadOnlyList<PetDto>>> PetsByDoctor(int id) => (await service.GetAsync(id, HttpContext.RequestAborted)) is not null
+        ? Ok((await service.PetsByVeterinarianAsync(id, HttpContext.RequestAborted))) : NotFound();
 }

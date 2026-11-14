@@ -15,7 +15,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     [HttpGet]
     [EndpointSummary("Получить всех владельцев")]
     [ProducesResponseType(typeof(IReadOnlyList<OwnerDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<OwnerDto>> GetAll() => Ok(service.Owners());
+    public async Task<ActionResult<IReadOnlyList<OwnerDto>>> GetAll() => Ok((await service.OwnersAsync(HttpContext.RequestAborted)));
 
     /// <summary>
     /// Получить владельца по идентификатору
@@ -25,9 +25,9 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     [EndpointSummary("Получить владельца по идентификатору")]
     [ProducesResponseType(typeof(OwnerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<OwnerDto> Get(int id)
+    public async Task<ActionResult<OwnerDto>> Get(int id)
     {
-        var entity = service.Get(id);
+        var entity = (await service.GetAsync(id, HttpContext.RequestAborted));
         return entity is null ? NotFound() : Ok(entity);
     }
 
@@ -39,9 +39,9 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     [EndpointSummary("Создать владельца")]
     [ProducesResponseType(typeof(OwnerDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<OwnerDto> Create(SaveOwnerRequest request)
+    public async Task<ActionResult<OwnerDto>> Create(SaveOwnerRequest request)
     {
-        var entity = service.Create(request);
+        var entity = (await service.CreateAsync(request, HttpContext.RequestAborted));
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
 
@@ -55,7 +55,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(OwnerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<OwnerDto> Update(int id, SaveOwnerRequest request) => Ok(service.Update(id, request));
+    public async Task<ActionResult<OwnerDto>> Update(int id, SaveOwnerRequest request) => Ok((await service.UpdateAsync(id, request, HttpContext.RequestAborted)));
 
     /// <summary>
     /// Удалить владельца
@@ -65,9 +65,9 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     [EndpointSummary("Удалить владельца")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        service.DeleteOwner(id);
+        await service.DeleteOwnerAsync(id, HttpContext.RequestAborted);
         return NoContent();
     }
 
@@ -77,7 +77,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     [HttpGet("multiple-pets")]
     [EndpointSummary("Получить владельцев нескольких питомцев")]
     [ProducesResponseType(typeof(IReadOnlyList<OwnerDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<OwnerDto>> MultiplePets() => Ok(service.OwnersWithMultiplePets());
+    public async Task<ActionResult<IReadOnlyList<OwnerDto>>> MultiplePets() => Ok((await service.OwnersWithMultiplePetsAsync(HttpContext.RequestAborted)));
 
     /// <summary>
     /// Получить питомцев владельца
@@ -85,5 +85,5 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}/pets")]
     [EndpointSummary("Получить питомцев владельца")]
-    public ActionResult<IReadOnlyList<PetDto>> GetPets(int id) => Ok(service.PetsByOwner(id));
+    public async Task<ActionResult<IReadOnlyList<PetDto>>> GetPets(int id) => Ok((await service.PetsByOwnerAsync(id, HttpContext.RequestAborted)));
 }

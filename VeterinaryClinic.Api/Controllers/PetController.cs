@@ -15,7 +15,7 @@ public sealed class PetController(IPetService service) : ControllerBase
     [HttpGet]
     [EndpointSummary("Получить всех питомцев")]
     [ProducesResponseType(typeof(IReadOnlyList<PetDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<PetDto>> GetAll() => Ok(service.Pets());
+    public async Task<ActionResult<IReadOnlyList<PetDto>>> GetAll() => Ok((await service.PetsAsync(HttpContext.RequestAborted)));
 
     /// <summary>
     /// Получить питомца по идентификатору
@@ -25,9 +25,9 @@ public sealed class PetController(IPetService service) : ControllerBase
     [EndpointSummary("Получить питомца по идентификатору")]
     [ProducesResponseType(typeof(PetDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<PetDto> Get(int id)
+    public async Task<ActionResult<PetDto>> Get(int id)
     {
-        var entity = service.Get(id);
+        var entity = (await service.GetAsync(id, HttpContext.RequestAborted));
         return entity is null ? NotFound() : Ok(entity);
     }
 
@@ -39,9 +39,9 @@ public sealed class PetController(IPetService service) : ControllerBase
     [EndpointSummary("Создать питомца")]
     [ProducesResponseType(typeof(PetDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<PetDto> Create(SavePetRequest request)
+    public async Task<ActionResult<PetDto>> Create(SavePetRequest request)
     {
-        var entity = service.Create(request);
+        var entity = (await service.CreateAsync(request, HttpContext.RequestAborted));
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
 
@@ -55,7 +55,7 @@ public sealed class PetController(IPetService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(PetDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<PetDto> Update(int id, SavePetRequest request) => Ok(service.Update(id, request));
+    public async Task<ActionResult<PetDto>> Update(int id, SavePetRequest request) => Ok((await service.UpdateAsync(id, request, HttpContext.RequestAborted)));
 
     /// <summary>
     /// Удалить питомца
@@ -65,9 +65,9 @@ public sealed class PetController(IPetService service) : ControllerBase
     [EndpointSummary("Удалить питомца")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        service.DeletePet(id);
+        await service.DeletePetAsync(id, HttpContext.RequestAborted);
         return NoContent();
     }
 
@@ -79,8 +79,8 @@ public sealed class PetController(IPetService service) : ControllerBase
     [EndpointSummary("Получить приёмы питомца")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<IReadOnlyList<AppointmentDto>> GetAppointments(int id) =>
-        Ok(service.AppointmentsByPet(id));
+    public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> GetAppointments(int id) =>
+        Ok((await service.AppointmentsByPetAsync(id, HttpContext.RequestAborted)));
 
     /// <summary>
     /// Возвращает владельца питомца
@@ -88,9 +88,9 @@ public sealed class PetController(IPetService service) : ControllerBase
     /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}/owner")]
     [EndpointSummary("Получить владельца питомца")]
-    public ActionResult<OwnerDto> GetOwner(int id)
+    public async Task<ActionResult<OwnerDto>> GetOwner(int id)
     {
-        var owner = service.OwnerByPet(id);
+        var owner = (await service.OwnerByPetAsync(id, HttpContext.RequestAborted));
         return owner is null ? NotFound() : Ok(owner);
     }
 }

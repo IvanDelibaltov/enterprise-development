@@ -15,7 +15,7 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [HttpGet]
     [EndpointSummary("Получить все приёмы")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<AppointmentDto>> GetAll() => Ok(service.Appointments());
+    public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> GetAll() => Ok((await service.AppointmentsAsync(HttpContext.RequestAborted)));
 
     /// <summary>
     /// Получить приём по идентификатору
@@ -25,9 +25,9 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [EndpointSummary("Получить приём по идентификатору")]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<AppointmentDto> Get(int id)
+    public async Task<ActionResult<AppointmentDto>> Get(int id)
     {
-        var entity = service.Get(id);
+        var entity = (await service.GetAsync(id, HttpContext.RequestAborted));
         return entity is null ? NotFound() : Ok(entity);
     }
 
@@ -39,9 +39,9 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [EndpointSummary("Создать приём")]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<AppointmentDto> Create(SaveAppointmentRequest request)
+    public async Task<ActionResult<AppointmentDto>> Create(SaveAppointmentRequest request)
     {
-        var entity = service.Create(request);
+        var entity = (await service.CreateAsync(request, HttpContext.RequestAborted));
         return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
     }
 
@@ -55,8 +55,8 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<AppointmentDto> Update(int id, SaveAppointmentRequest request)
-        => Ok(service.Update(id, request));
+    public async Task<ActionResult<AppointmentDto>> Update(int id, SaveAppointmentRequest request)
+        => Ok((await service.UpdateAsync(id, request, HttpContext.RequestAborted)));
 
     /// <summary>
     /// Удалить приём
@@ -66,9 +66,9 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [EndpointSummary("Удалить приём")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        service.DeleteAppointment(id);
+        await service.DeleteAppointmentAsync(id, HttpContext.RequestAborted);
         return NoContent();
     }
 
@@ -79,11 +79,11 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [HttpGet("current-month")]
     [EndpointSummary("Получить приёмы за текущий месяц")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<AppointmentDto>> CurrentMonth([FromQuery] int roomNumber)
+    public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> CurrentMonth([FromQuery] int roomNumber)
     {
         if (roomNumber <= 0)
             return BadRequest();
 
-        return Ok(service.AppointmentsThisMonth(roomNumber, DateTime.Today));
+        return Ok((await service.AppointmentsThisMonthAsync(roomNumber, DateTime.Today, HttpContext.RequestAborted)));
     }
 }

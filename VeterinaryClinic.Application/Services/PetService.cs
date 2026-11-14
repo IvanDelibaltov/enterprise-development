@@ -8,27 +8,24 @@ namespace VeterinaryClinic.Application.Services;
 /// </summary>
 public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds, IRepository<Owner> owners, IRepository<Appointment> appointments) : IPetService
 {
-    /// <summary>
-    /// Возвращает всех питомцев
-    /// </summary>
-    public IReadOnlyList<PetDto> Pets() => pets.GetAll().Select(DtoMapper.Map).ToArray();
-
-    /// <summary>
-    /// Находит питомца
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public PetDto? Get(int id) => pets.Get(id) is { } p ? DtoMapper.Map(p) : null;
-
-    /// <summary>
-    /// Создаёт питомца
-    /// </summary>
-    /// <param name="x">Данные для сохранения</param>
-    public PetDto Create(SavePetRequest x)
+    private static void Validate(SavePetRequest x)
     {
+        if (string.IsNullOrWhiteSpace(x.Name) || x.Weight <= 0 || !double.IsFinite(x.Weight) ||
+            x.BirthDate > DateOnly.FromDateTime(DateTime.Today))
+            throw new ArgumentException("Invalid pet");
+    }
+
+    public async Task<IReadOnlyList<PetDto>> PetsAsync(CancellationToken cancellationToken = default) => (await pets.GetAllAsync(cancellationToken)).Select(DtoMapper.Map).ToArray();
+
+    public async Task<PetDto?> GetAsync(int id, CancellationToken cancellationToken = default) => (await pets.GetAsync(id, cancellationToken)) is { } p ? DtoMapper.Map(p) : null;
+
+    public async Task<PetDto> CreateAsync(SavePetRequest x, CancellationToken cancellationToken = default)
+    {
+
         Validate(x);
-        var breed = breeds.Get(x.BreedId) ?? throw new ArgumentException("Breed not found");
-        var owner = ResolveOwner(x.OwnerId);
-        var saved = pets.Create(id =>
+        var breed = (await breeds.GetAsync(x.BreedId, cancellationToken)) ?? throw new ArgumentException("Breed not found");
+        var owner = await ResolveOwnerAsync(x.OwnerId, cancellationToken);
+        var saved = (await pets.CreateAsync(id =>
         {
             var p = new Pet
             {
@@ -38,68 +35,57 @@ public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds,
                 BirthDate = x.BirthDate,
                 Weight = x.Weight
             }; p.ChangeOwner(owner); return p;
-        });
+        }, cancellationToken));
         return DtoMapper.Map(saved);
     }
 
-    /// <summary>
-    /// Изменяет питомца с проверкой существующих приёмов
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    /// <param name="x">Данные для сохранения</param>
-    public PetDto Update(int id, SavePetRequest x)
+
+    public async Task<PetDto> UpdateAsync(int id, SavePetRequest x, CancellationToken cancellationToken = default)
     {
+
         Validate(x);
-        var breed = breeds.Get(x.BreedId) ?? throw new ArgumentException("Breed not found");
-        var owner = ResolveOwner(x.OwnerId);
-        if (appointments.Any(a => a.Pet.Id == id && a.Veterinarian.Specialization.AnimalType != breed.AnimalType))
+        var breed = (await breeds.GetAsync(x.BreedId, cancellationToken)) ?? throw new ArgumentException("Breed not found");
+        var owner = await ResolveOwnerAsync(x.OwnerId, cancellationToken);
+        if ((await appointments.AnyAsync(a => a.Pet.Id == id && a.Veterinarian.Specialization.AnimalType != breed.AnimalType, cancellationToken)))
             throw new InvalidOperationException("Breed is incompatible with existing appointments");
-        return DtoMapper.Map(pets.Update(id, p =>
+        return DtoMapper.Map((await pets.UpdateAsync(id, p =>
         {
             p.Name = x.Name; p.Breed = breed;
             p.Weight = x.Weight; p.BirthDate = x.BirthDate; p.ChangeOwner(owner);
-        }));
+        }, cancellationToken)));
     }
 
-    /// <summary>
-    /// Удаляет питомца, у которого нет приёмов
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public void DeletePet(int id)
+
+    public async Task DeletePetAsync(int id, CancellationToken cancellationToken = default)
     {
-        var pet = pets.Get(id);
+
+        var pet = (await pets.GetAsync(id, cancellationToken));
         if (pet is null) return;
-        if (appointments.Any(a => a.Pet.Id == id)) throw new InvalidOperationException("Pet has appointments");
+        if ((await appointments.AnyAsync(a => a.Pet.Id == id, cancellationToken))) throw new InvalidOperationException("Pet has appointments");
         pet.ChangeOwner(null);
-        pets.Remove(id);
+        await pets.RemoveAsync(id, cancellationToken);
     }
 
-    /// <summary>
-    /// Возвращает приёмы питомца
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public IReadOnlyList<AppointmentDto> AppointmentsByPet(int id)
+
+    public async Task<IReadOnlyList<AppointmentDto>> AppointmentsByPetAsync(int id, CancellationToken cancellationToken = default)
     {
-        if (pets.Get(id) is null) throw new KeyNotFoundException($"Pet {id} not found");
-        return appointments.Find(a => a.Pet.Id == id).OrderBy(a => a.AppointmentDate)
+
+        if ((await pets.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Pet {id} not found");
+        return (await appointments.FindAsync(a => a.Pet.Id == id, cancellationToken)).OrderBy(a => a.AppointmentDate)
             .Select(DtoMapper.Map).ToArray();
     }
 
-    /// <summary>
-    /// Возвращает владельца питомца
-    /// </summary>
-    /// <param name="id">Идентификатор записи</param>
-    public OwnerDto? OwnerByPet(int id)
+
+    public async Task<OwnerDto?> OwnerByPetAsync(int id, CancellationToken cancellationToken = default)
     {
-        var pet = pets.Get(id) ?? throw new KeyNotFoundException($"Pet {id} not found");
+
+        var pet = (await pets.GetAsync(id, cancellationToken)) ?? throw new KeyNotFoundException($"Pet {id} not found");
         return pet.Owner is { } o ? DtoMapper.Map(o) : null;
     }
-    private Owner? ResolveOwner(int? id) => id is int ownerId
-        ? owners.Get(ownerId) ?? throw new ArgumentException("Owner not found") : null;
-    private static void Validate(SavePetRequest x)
+
+    private async Task<Owner?> ResolveOwnerAsync(int? id, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(x.Name) || x.Weight <= 0 || !double.IsFinite(x.Weight) ||
-            x.BirthDate > DateOnly.FromDateTime(DateTime.Today))
-            throw new ArgumentException("Invalid pet");
+        if (id is not int ownerId) return null;
+        return await owners.GetAsync(ownerId, cancellationToken) ?? throw new ArgumentException("Owner not found");
     }
 }

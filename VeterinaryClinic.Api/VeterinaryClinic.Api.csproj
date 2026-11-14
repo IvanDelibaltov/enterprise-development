@@ -16,6 +16,7 @@
     <ProjectReference Include="..\VeterinaryClinic.Application.Contracts\VeterinaryClinic.Application.Contracts.csproj" />
     <ProjectReference Include="..\VeterinaryClinic.Application\VeterinaryClinic.Application.csproj" />
     <ProjectReference Include="..\VeterinaryClinic.Infrastructure\VeterinaryClinic.Infrastructure.csproj" />
+    <ProjectReference Include="..\VeterinaryClinic.Infrastructure.PostgreSQL\VeterinaryClinic.Infrastructure.PostgreSQL.csproj" />
   </ItemGroup>
 
 </Project>

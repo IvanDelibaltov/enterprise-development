@@ -3,7 +3,7 @@ namespace VeterinaryClinic.Domain.Models;
 /// <summary>
 /// Питомец клиники
 /// </summary>
-public class Pet
+public class Pet : IEntity
 {
     /// <summary>
     /// Идентификатор питомца

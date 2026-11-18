@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Domain.Repositories;
 
@@ -12,7 +18,7 @@ public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds,
     {
         if (string.IsNullOrWhiteSpace(x.Name) || x.Weight <= 0 || !double.IsFinite(x.Weight) ||
             x.BirthDate > DateOnly.FromDateTime(DateTime.Today))
-            throw new ArgumentException("Invalid pet");
+            throw new ArgumentException("Некорректные данные питомца");
     }
 
     public async Task<IReadOnlyList<PetDto>> PetsAsync(CancellationToken cancellationToken = default) => (await pets.GetAllAsync(cancellationToken)).Select(DtoMapper.Map).ToArray();
@@ -23,19 +29,17 @@ public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds,
     {
 
         Validate(x);
-        var breed = (await breeds.GetAsync(x.BreedId, cancellationToken)) ?? throw new ArgumentException("Breed not found");
+        var breed = (await breeds.GetAsync(x.BreedId, cancellationToken)) ?? throw new ArgumentException("Порода не найдена");
         var owner = await ResolveOwnerAsync(x.OwnerId, cancellationToken);
-        var saved = (await pets.CreateAsync(id =>
+        var pet = new Pet
         {
-            var p = new Pet
-            {
-                Id = id,
-                Name = x.Name,
-                Breed = breed,
-                BirthDate = x.BirthDate,
-                Weight = x.Weight
-            }; p.ChangeOwner(owner); return p;
-        }, cancellationToken));
+            Name = x.Name,
+            Breed = breed,
+            BirthDate = x.BirthDate,
+            Weight = x.Weight
+        };
+        pet.ChangeOwner(owner);
+        var saved = await pets.CreateAsync(pet, cancellationToken);
         return DtoMapper.Map(saved);
     }
 
@@ -44,10 +48,10 @@ public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds,
     {
 
         Validate(x);
-        var breed = (await breeds.GetAsync(x.BreedId, cancellationToken)) ?? throw new ArgumentException("Breed not found");
+        var breed = (await breeds.GetAsync(x.BreedId, cancellationToken)) ?? throw new ArgumentException("Порода не найдена");
         var owner = await ResolveOwnerAsync(x.OwnerId, cancellationToken);
         if ((await appointments.AnyAsync(a => a.Pet.Id == id && a.Veterinarian.Specialization.AnimalType != breed.AnimalType, cancellationToken)))
-            throw new InvalidOperationException("Breed is incompatible with existing appointments");
+            throw new InvalidOperationException("Порода несовместима с существующими приёмами");
         return DtoMapper.Map((await pets.UpdateAsync(id, p =>
         {
             p.Name = x.Name; p.Breed = breed;
@@ -61,7 +65,7 @@ public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds,
 
         var pet = (await pets.GetAsync(id, cancellationToken));
         if (pet is null) return;
-        if ((await appointments.AnyAsync(a => a.Pet.Id == id, cancellationToken))) throw new InvalidOperationException("Pet has appointments");
+        if ((await appointments.AnyAsync(a => a.Pet.Id == id, cancellationToken))) throw new InvalidOperationException("У питомца есть записи на приём");
         pet.ChangeOwner(null);
         await pets.RemoveAsync(id, cancellationToken);
     }
@@ -70,7 +74,7 @@ public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds,
     public async Task<IReadOnlyList<AppointmentDto>> AppointmentsByPetAsync(int id, CancellationToken cancellationToken = default)
     {
 
-        if ((await pets.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Pet {id} not found");
+        if ((await pets.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Питомец {id} не найден");
         return (await appointments.FindAsync(a => a.Pet.Id == id, cancellationToken)).OrderBy(a => a.AppointmentDate)
             .Select(DtoMapper.Map).ToArray();
     }
@@ -79,13 +83,13 @@ public sealed class PetService(IRepository<Pet> pets, IRepository<Breed> breeds,
     public async Task<OwnerDto?> OwnerByPetAsync(int id, CancellationToken cancellationToken = default)
     {
 
-        var pet = (await pets.GetAsync(id, cancellationToken)) ?? throw new KeyNotFoundException($"Pet {id} not found");
+        var pet = (await pets.GetAsync(id, cancellationToken)) ?? throw new KeyNotFoundException($"Питомец {id} не найден");
         return pet.Owner is { } o ? DtoMapper.Map(o) : null;
     }
 
     private async Task<Owner?> ResolveOwnerAsync(int? id, CancellationToken cancellationToken)
     {
         if (id is not int ownerId) return null;
-        return await owners.GetAsync(ownerId, cancellationToken) ?? throw new ArgumentException("Owner not found");
+        return await owners.GetAsync(ownerId, cancellationToken) ?? throw new ArgumentException("Владелец не найден");
     }
 }

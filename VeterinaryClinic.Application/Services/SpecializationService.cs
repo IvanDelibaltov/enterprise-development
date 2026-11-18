@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Domain.Repositories;
 
@@ -11,7 +17,7 @@ public sealed class SpecializationService(IRepository<Specialization> specializa
     private static void Validate(SaveSpecializationRequest x)
     {
         if (string.IsNullOrWhiteSpace(x.Name) || !Enum.IsDefined(x.AnimalType))
-            throw new ArgumentException("Invalid specialization");
+            throw new ArgumentException("Некорректные данные специализации");
     }
     public async Task<IReadOnlyList<SpecializationDto>> SpecializationsAsync(CancellationToken cancellationToken = default) => (await specializations.GetAllAsync(cancellationToken)).Select(DtoMapper.Map).ToArray();
 
@@ -22,8 +28,8 @@ public sealed class SpecializationService(IRepository<Specialization> specializa
 
         Validate(x);
         await EnsureUniqueAsync(x, null, cancellationToken);
-        return DtoMapper.Map((await specializations.CreateAsync(id => new Specialization
-        { Id = id, Name = x.Name.Trim(), AnimalType = x.AnimalType }, cancellationToken)));
+        return DtoMapper.Map((await specializations.CreateAsync(new Specialization
+        { Name = x.Name.Trim(), AnimalType = x.AnimalType }, cancellationToken)));
     }
 
 
@@ -31,10 +37,10 @@ public sealed class SpecializationService(IRepository<Specialization> specializa
     {
 
         Validate(x);
-        var current = (await specializations.GetAsync(id, cancellationToken)) ?? throw new KeyNotFoundException($"Specialization {id} not found");
+        var current = (await specializations.GetAsync(id, cancellationToken)) ?? throw new KeyNotFoundException($"Специализация {id} не найдена");
         await EnsureUniqueAsync(x, id, cancellationToken);
         if (current.AnimalType != x.AnimalType && (await veterinarians.AnyAsync(v => v.Specialization.Id == id, cancellationToken)))
-            throw new InvalidOperationException("Cannot change species of a specialization in use");
+            throw new InvalidOperationException("Нельзя изменить вид используемой специализации");
         return DtoMapper.Map((await specializations.UpdateAsync(id, s => { s.Name = x.Name.Trim(); s.AnimalType = x.AnimalType; }, cancellationToken)));
     }
 
@@ -43,7 +49,7 @@ public sealed class SpecializationService(IRepository<Specialization> specializa
     {
 
         if ((await veterinarians.AnyAsync(v => v.Specialization.Id == id, cancellationToken)))
-            throw new InvalidOperationException("Specialization is in use");
+            throw new InvalidOperationException("Специализация используется");
         await specializations.RemoveAsync(id, cancellationToken);
     }
 
@@ -51,14 +57,14 @@ public sealed class SpecializationService(IRepository<Specialization> specializa
     public async Task<IReadOnlyList<VeterinarianDto>> VeterinariansBySpecializationAsync(int id, CancellationToken cancellationToken = default)
     {
 
-        if ((await specializations.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Specialization {id} not found");
+        if ((await specializations.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Специализация {id} не найдена");
         return (await veterinarians.FindAsync(v => v.Specialization.Id == id, cancellationToken)).Select(DtoMapper.Map).ToArray();
     }
 
     private async Task EnsureUniqueAsync(SaveSpecializationRequest x, int? exceptId, CancellationToken cancellationToken)
     {
         if (await specializations.AnyAsync(s => s.Id != exceptId && s.AnimalType == x.AnimalType &&
-            string.Equals(s.Name, x.Name.Trim(), StringComparison.OrdinalIgnoreCase), cancellationToken))
-            throw new InvalidOperationException("Specialization already exists");
+            s.Name.ToLower() == x.Name.Trim().ToLower(), cancellationToken))
+            throw new InvalidOperationException("Специализация уже существует");
     }
 }

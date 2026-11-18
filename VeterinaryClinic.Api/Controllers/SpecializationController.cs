@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using Microsoft.AspNetCore.Mvc;
 
 namespace VeterinaryClinic.Api.Controllers;
@@ -13,7 +19,7 @@ public sealed class SpecializationController(ISpecializationService service) : C
     /// Получить все специализации
     /// </summary>
     [HttpGet]
-    [EndpointSummary("Получить все специализации")]
+    [EndpointSummary("Get all specializations")]
     [ProducesResponseType(typeof(IReadOnlyList<SpecializationDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<SpecializationDto>>> GetAll() => Ok((await service.SpecializationsAsync(HttpContext.RequestAborted)));
 
@@ -22,7 +28,7 @@ public sealed class SpecializationController(ISpecializationService service) : C
     /// </summary>
     /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}")]
-    [EndpointSummary("Получить специализацию по идентификатору")]
+    [EndpointSummary("Get specialization by ID")]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SpecializationDto>> Get(int id)
@@ -36,7 +42,7 @@ public sealed class SpecializationController(ISpecializationService service) : C
     /// </summary>
     /// <param name="request">Данные запроса</param>
     [HttpPost]
-    [EndpointSummary("Создать специализацию")]
+    [EndpointSummary("Create specialization")]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<SpecializationDto>> Create(SaveSpecializationRequest request)
@@ -51,7 +57,7 @@ public sealed class SpecializationController(ISpecializationService service) : C
     /// <param name="id">Идентификатор записи</param>
     /// <param name="request">Данные запроса</param>
     [HttpPut("{id:int}")]
-    [EndpointSummary("Обновить специализацию")]
+    [EndpointSummary("Update specialization")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -63,7 +69,7 @@ public sealed class SpecializationController(ISpecializationService service) : C
     /// </summary>
     /// <param name="id">Идентификатор записи</param>
     [HttpDelete("{id:int}")]
-    [EndpointSummary("Удалить специализацию")]
+    [EndpointSummary("Delete specialization")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id)
@@ -77,7 +83,7 @@ public sealed class SpecializationController(ISpecializationService service) : C
     /// </summary>
     /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}/veterinarians")]
-    [EndpointSummary("Получить ветеринаров по специализации")]
+    [EndpointSummary("Get veterinarians by specialization")]
     public async Task<ActionResult<IReadOnlyList<VeterinarianDto>>> GetVeterinarians(int id)
         => Ok((await service.VeterinariansBySpecializationAsync(id, HttpContext.RequestAborted)));
 }

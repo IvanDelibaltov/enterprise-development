@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using Microsoft.AspNetCore.Mvc;
 
 namespace VeterinaryClinic.Api.Controllers;
@@ -13,7 +19,7 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     /// Получить все приёмы
     /// </summary>
     [HttpGet]
-    [EndpointSummary("Получить все приёмы")]
+    [EndpointSummary("Get all appointments")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> GetAll() => Ok((await service.AppointmentsAsync(HttpContext.RequestAborted)));
 
@@ -22,7 +28,7 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     /// </summary>
     /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}")]
-    [EndpointSummary("Получить приём по идентификатору")]
+    [EndpointSummary("Get appointment by ID")]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AppointmentDto>> Get(int id)
@@ -36,7 +42,7 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     /// </summary>
     /// <param name="request">Данные запроса</param>
     [HttpPost]
-    [EndpointSummary("Создать приём")]
+    [EndpointSummary("Create appointment")]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AppointmentDto>> Create(SaveAppointmentRequest request)
@@ -51,7 +57,7 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     /// <param name="id">Идентификатор записи</param>
     /// <param name="request">Данные запроса</param>
     [HttpPut("{id:int}")]
-    [EndpointSummary("Обновить приём")]
+    [EndpointSummary("Update appointment")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -63,7 +69,7 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     /// </summary>
     /// <param name="id">Идентификатор записи</param>
     [HttpDelete("{id:int}")]
-    [EndpointSummary("Удалить приём")]
+    [EndpointSummary("Delete appointment")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id)
@@ -77,7 +83,7 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     /// </summary>
     /// <param name="roomNumber">Номер кабинета</param>
     [HttpGet("current-month")]
-    [EndpointSummary("Получить приёмы за текущий месяц")]
+    [EndpointSummary("Get appointments for the current month")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> CurrentMonth([FromQuery] int roomNumber)
     {

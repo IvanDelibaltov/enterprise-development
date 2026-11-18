@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using Microsoft.AspNetCore.Mvc;
 
 namespace VeterinaryClinic.Api.Controllers;
@@ -13,7 +19,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     /// Получить всех владельцев
     /// </summary>
     [HttpGet]
-    [EndpointSummary("Получить всех владельцев")]
+    [EndpointSummary("Get all owners")]
     [ProducesResponseType(typeof(IReadOnlyList<OwnerDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<OwnerDto>>> GetAll() => Ok((await service.OwnersAsync(HttpContext.RequestAborted)));
 
@@ -22,7 +28,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     /// </summary>
     /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}")]
-    [EndpointSummary("Получить владельца по идентификатору")]
+    [EndpointSummary("Get owner by ID")]
     [ProducesResponseType(typeof(OwnerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<OwnerDto>> Get(int id)
@@ -36,7 +42,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     /// </summary>
     /// <param name="request">Данные запроса</param>
     [HttpPost]
-    [EndpointSummary("Создать владельца")]
+    [EndpointSummary("Create owner")]
     [ProducesResponseType(typeof(OwnerDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<OwnerDto>> Create(SaveOwnerRequest request)
@@ -51,7 +57,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     /// <param name="id">Идентификатор записи</param>
     /// <param name="request">Данные запроса</param>
     [HttpPut("{id:int}")]
-    [EndpointSummary("Обновить владельца")]
+    [EndpointSummary("Update owner")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(OwnerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -62,7 +68,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     /// </summary>
     /// <param name="id">Идентификатор записи</param>
     [HttpDelete("{id:int}")]
-    [EndpointSummary("Удалить владельца")]
+    [EndpointSummary("Delete owner")]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id)
@@ -75,7 +81,7 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     /// Получить владельцев нескольких питомцев
     /// </summary>
     [HttpGet("multiple-pets")]
-    [EndpointSummary("Получить владельцев нескольких питомцев")]
+    [EndpointSummary("Get owners with multiple pets")]
     [ProducesResponseType(typeof(IReadOnlyList<OwnerDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<OwnerDto>>> MultiplePets() => Ok((await service.OwnersWithMultiplePetsAsync(HttpContext.RequestAborted)));
 
@@ -84,6 +90,6 @@ public sealed class OwnerController(IOwnerService service) : ControllerBase
     /// </summary>
     /// <param name="id">Идентификатор записи</param>
     [HttpGet("{id:int}/pets")]
-    [EndpointSummary("Получить питомцев владельца")]
+    [EndpointSummary("Get pets by owner")]
     public async Task<ActionResult<IReadOnlyList<PetDto>>> GetPets(int id) => Ok((await service.PetsByOwnerAsync(id, HttpContext.RequestAborted)));
 }

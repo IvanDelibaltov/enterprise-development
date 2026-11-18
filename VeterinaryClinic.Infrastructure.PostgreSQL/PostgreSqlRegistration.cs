@@ -1,3 +1,4 @@
+using VeterinaryClinic.Application.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using VeterinaryClinic.Domain.Repositories;
@@ -10,6 +11,7 @@ public static class PostgreSqlRegistration
     {
         services.AddDbContext<ClinicDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped(typeof(IRepository<>), typeof(PostgreSqlRepository<>));
+        services.AddScoped<IOwnerAnalytics, PostgreSqlOwnerAnalytics>();
         return services;
     }
 }

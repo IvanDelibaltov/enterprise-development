@@ -3,12 +3,12 @@ using VeterinaryClinic.Domain.Repositories;
 using VeterinaryClinic.Domain.Data;
 using VeterinaryClinic.Domain.Models;
 
-namespace VeterinaryClinic.Infrastructure;
+namespace VeterinaryClinic.Tests.TestDoubles;
 
 /// <summary>
 /// Заполняет зарегистрированные репозитории тестовыми данными
 /// </summary>
-public static class ClinicSeedFactory
+public static class ClinicTestSeed
 {
     /// <summary>
     /// Добавляет согласованные тестовые данные в существующие репозитории
@@ -19,19 +19,19 @@ public static class ClinicSeedFactory
         var breeds = provider.GetRequiredService<IRepository<Breed>>();
         foreach (var x in VeterinaryClinicTestData.Breeds)
         {
-            await breeds.CreateAsync(_ => new Breed { Id = x.Id, Name = x.Name, AnimalType = x.AnimalType });
+            await breeds.CreateAsync(new Breed { Id = x.Id, Name = x.Name, AnimalType = x.AnimalType });
         }
 
         var specializations = provider.GetRequiredService<IRepository<Specialization>>();
         foreach (var x in VeterinaryClinicTestData.Specializations)
         {
-            await specializations.CreateAsync(_ => new Specialization { Id = x.Id, Name = x.Name, AnimalType = x.AnimalType });
+            await specializations.CreateAsync(new Specialization { Id = x.Id, Name = x.Name, AnimalType = x.AnimalType });
         }
 
         var owners = provider.GetRequiredService<IRepository<Owner>>();
         foreach (var x in VeterinaryClinicTestData.Owners)
         {
-            await owners.CreateAsync(_ => new Owner
+            await owners.CreateAsync(new Owner
             {
                 Id = x.Id,
                 FirstName = x.FirstName,
@@ -46,7 +46,7 @@ public static class ClinicSeedFactory
         foreach (var x in VeterinaryClinicTestData.Veterinarians)
         {
             var specialization = await RequireAsync(specializations, x.Specialization.Id, "Specialization");
-            await veterinarians.CreateAsync(_ => new Veterinarian
+            await veterinarians.CreateAsync(new Veterinarian
             {
                 Id = x.Id,
                 FirstName = x.FirstName,
@@ -74,7 +74,7 @@ public static class ClinicSeedFactory
                 Breed = breed,
             };
             pet.ChangeOwner(owner);
-            await pets.CreateAsync(_ => pet);
+            await pets.CreateAsync(pet);
         }
 
         var appointments = provider.GetRequiredService<IRepository<Appointment>>();
@@ -82,7 +82,7 @@ public static class ClinicSeedFactory
         {
             var pet = await RequireAsync(pets, x.Pet.Id, "Pet");
             var veterinarian = await RequireAsync(veterinarians, x.Veterinarian.Id, "Veterinarian");
-            await appointments.CreateAsync(_ => new Appointment
+            await appointments.CreateAsync(new Appointment
             {
                 Id = x.Id,
                 AppointmentDate = x.AppointmentDate,
@@ -94,9 +94,9 @@ public static class ClinicSeedFactory
         }
     }
 
-    private static async Task<T> RequireAsync<T>(IRepository<T> repository, int id, string entityName) where T : class
+    private static async Task<T> RequireAsync<T>(IRepository<T> repository, int id, string entityName) where T : class, IEntity
     {
         return await repository.GetAsync(id)
-            ?? throw new InvalidOperationException($"Seed data references missing {entityName} with ID {id}");
+            ?? throw new InvalidOperationException($"В тестовых данных отсутствует {entityName} с идентификатором {id}");
     }
 }

@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Domain.Repositories;
 
@@ -11,13 +17,13 @@ public sealed class AppointmentService(IRepository<Appointment> appointments, IR
     private static void Validate(SaveAppointmentRequest x)
     {
         if (x.RoomNumber <= 0 || x.AppointmentDate < DateTime.Today || x.AppointmentDate > DateTime.Today.AddYears(5))
-            throw new ArgumentException("Appointment date must be today or within the next five years");
+            throw new ArgumentException("Дата приёма должна быть не раньше сегодняшнего дня и не позднее пяти лет");
     }
 
     private static void EnsureCompatible(Pet pet, Veterinarian vet)
     {
         if (pet.Breed.AnimalType != vet.Specialization.AnimalType)
-            throw new ArgumentException("Veterinarian specialization does not match pet species");
+            throw new ArgumentException("Специализация ветеринара не соответствует виду питомца");
     }
 
     public async Task<IReadOnlyList<AppointmentDto>> AppointmentsAsync(CancellationToken cancellationToken = default) => (await appointments.GetAllAsync(cancellationToken)).Select(DtoMapper.Map).ToArray();
@@ -31,13 +37,12 @@ public sealed class AppointmentService(IRepository<Appointment> appointments, IR
     {
 
         Validate(x);
-        var pet = (await pets.GetAsync(x.PetId, cancellationToken)) ?? throw new ArgumentException("Pet not found");
-        var vet = (await veterinarians.GetAsync(x.VeterinarianId, cancellationToken)) ?? throw new ArgumentException("Veterinarian not found");
+        var pet = (await pets.GetAsync(x.PetId, cancellationToken)) ?? throw new ArgumentException("Питомец не найден");
+        var vet = (await veterinarians.GetAsync(x.VeterinarianId, cancellationToken)) ?? throw new ArgumentException("Ветеринар не найден");
         EnsureCompatible(pet, vet);
         await EnsureAvailableAsync(x, null, cancellationToken);
-        var saved = (await appointments.CreateAsync(id => new Appointment
+        var saved = (await appointments.CreateAsync(new Appointment
         {
-            Id = id,
             Pet = pet,
             Veterinarian = vet,
             RoomNumber = x.RoomNumber,
@@ -52,9 +57,9 @@ public sealed class AppointmentService(IRepository<Appointment> appointments, IR
     {
 
         Validate(x);
-        if ((await appointments.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Appointment {id} not found");
-        var pet = (await pets.GetAsync(x.PetId, cancellationToken)) ?? throw new ArgumentException("Pet not found");
-        var vet = (await veterinarians.GetAsync(x.VeterinarianId, cancellationToken)) ?? throw new ArgumentException("Veterinarian not found");
+        if ((await appointments.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Приём {id} не найден");
+        var pet = (await pets.GetAsync(x.PetId, cancellationToken)) ?? throw new ArgumentException("Питомец не найден");
+        var vet = (await veterinarians.GetAsync(x.VeterinarianId, cancellationToken)) ?? throw new ArgumentException("Ветеринар не найден");
         EnsureCompatible(pet, vet);
         await EnsureAvailableAsync(x, id, cancellationToken);
         return DtoMapper.Map((await appointments.UpdateAsync(id, a =>
@@ -74,6 +79,6 @@ public sealed class AppointmentService(IRepository<Appointment> appointments, IR
     {
         if (await appointments.AnyAsync(a => a.Id != excludedId && a.RoomNumber == x.RoomNumber &&
             a.AppointmentDate == x.AppointmentDate, cancellationToken))
-            throw new InvalidOperationException("Room is already booked for this time");
+            throw new InvalidOperationException("Кабинет уже занят на это время");
     }
 }

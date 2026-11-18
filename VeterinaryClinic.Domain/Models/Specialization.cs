@@ -5,7 +5,7 @@ namespace VeterinaryClinic.Domain.Models;
 /// <summary>
 /// Специализация ветеринара
 /// </summary>
-public class Specialization
+public class Specialization : IEntity
 {
     /// <summary>
     /// Идентификатор специализации

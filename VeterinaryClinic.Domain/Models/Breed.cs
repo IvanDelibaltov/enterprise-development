@@ -5,7 +5,7 @@ namespace VeterinaryClinic.Domain.Models;
 /// <summary>
 /// Порода животного
 /// </summary>
-public class Breed
+public class Breed : IEntity
 {
     /// <summary>
     /// Идентификатор породы

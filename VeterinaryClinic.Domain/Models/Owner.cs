@@ -3,7 +3,7 @@ namespace VeterinaryClinic.Domain.Models;
 /// <summary>
 /// Владелец питомцев
 /// </summary>
-public class Owner : Person
+public class Owner : Person, IEntity
 {
     /// <summary>
     /// Идентификатор владельца

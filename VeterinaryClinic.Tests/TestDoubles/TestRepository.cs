@@ -1,10 +1,11 @@
+using VeterinaryClinic.Domain.Models;
 using System.Linq.Expressions;
 using VeterinaryClinic.Domain.Repositories;
 
-namespace VeterinaryClinic.Infrastructure;
+namespace VeterinaryClinic.Tests.TestDoubles;
 
-/// <summary>Репозиторий тестовых данных в оперативной памяти.</summary>
-public sealed class InMemoryRepository<T>(IEnumerable<T> initial, Func<T, int> idSelector) : IRepository<T> where T : class
+/// <summary>Тестовая подмена репозитория для проверки сервисов без базы данных.</summary>
+public sealed class TestRepository<T>(IEnumerable<T> initial, Func<T, int> idSelector) : IRepository<T> where T : class, IEntity
 {
     private readonly List<T> _items = initial.ToList();
     public Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -32,20 +33,16 @@ public sealed class InMemoryRepository<T>(IEnumerable<T> initial, Func<T, int> i
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(_items.FirstOrDefault(x => idSelector(x) == id));
     }
-    public Task<int> NextIdAsync(CancellationToken cancellationToken = default)
+    public Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(_items.Count == 0 ? 1 : _items.Max(idSelector) + 1);
-    }
-    public async Task<T> CreateAsync(Func<int, T> factory, CancellationToken cancellationToken = default)
-    {
-        var entity = factory(await NextIdAsync(cancellationToken));
+        if (entity.Id == 0) entity.Id = _items.Count == 0 ? 1 : _items.Max(x => x.Id) + 1;
         _items.Add(entity);
-        return entity;
+        return Task.FromResult(entity);
     }
     public async Task<T> UpdateAsync(int id, Action<T> apply, CancellationToken cancellationToken = default)
     {
-        var entity = await GetAsync(id, cancellationToken) ?? throw new KeyNotFoundException($"Entity with ID {id} was not found");
+        var entity = await GetAsync(id, cancellationToken) ?? throw new KeyNotFoundException($"Сущность с идентификатором {id} не найдена");
         apply(entity);
         return entity;
     }

@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" Version="4.0.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +20,5 @@
   <ItemGroup>
     <ProjectReference Include="..\VeterinaryClinic.Domain\VeterinaryClinic.Domain.csproj" />
     <ProjectReference Include="..\VeterinaryClinic.Application\VeterinaryClinic.Application.csproj" />
-    <ProjectReference Include="..\VeterinaryClinic.Infrastructure\VeterinaryClinic.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

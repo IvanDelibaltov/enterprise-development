@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 namespace VeterinaryClinic.Application.Contracts.Veterinarians;
 
 /// <summary>
@@ -8,33 +14,33 @@ public interface IVeterinarianService
     /// <summary>
     /// Возвращает список ветеринаров клиники.
     /// </summary>
-    Task<IReadOnlyList<VeterinarianDto>> VeterinariansAsync(CancellationToken cancellationToken = default);
+    public Task<IReadOnlyList<VeterinarianDto>> VeterinariansAsync(CancellationToken cancellationToken = default);
     /// <summary>
     /// Находит ветеринара по идентификатору.
     /// </summary>
-    Task<VeterinarianDto?> GetAsync(int id, CancellationToken cancellationToken = default);
+    public Task<VeterinarianDto?> GetAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
     /// Создаёт ветеринара на основе переданных данных.
     /// </summary>
-    Task<VeterinarianDto> CreateAsync(SaveVeterinarianRequest request, CancellationToken cancellationToken = default);
+    public Task<VeterinarianDto> CreateAsync(SaveVeterinarianRequest request, CancellationToken cancellationToken = default);
     /// <summary>
     /// Обновляет ветеринара по идентификатору.
     /// </summary>
-    Task<VeterinarianDto> UpdateAsync(int id, SaveVeterinarianRequest request, CancellationToken cancellationToken = default);
+    public Task<VeterinarianDto> UpdateAsync(int id, SaveVeterinarianRequest request, CancellationToken cancellationToken = default);
     /// <summary>
     /// Удаляет ветеринара по идентификатору.
     /// </summary>
-    Task DeleteVeterinarianAsync(int id, CancellationToken cancellationToken = default);
+    public Task DeleteVeterinarianAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
     /// Возвращает ветеринаров, работающих с указанным видом животных.
     /// </summary>
-    Task<IReadOnlyList<VeterinarianDto>> VeterinariansBySpeciesAsync(VeterinaryClinic.Domain.Shared.Enums.AnimalType species, CancellationToken cancellationToken = default);
+    public Task<IReadOnlyList<VeterinarianDto>> VeterinariansBySpeciesAsync(VeterinaryClinic.Domain.Shared.Enums.AnimalType species, CancellationToken cancellationToken = default);
     /// <summary>
     /// Возвращает животных, обслуживаемых указанным ветеринаром.
     /// </summary>
-    Task<IReadOnlyList<PetDto>> PetsByVeterinarianAsync(int id, CancellationToken cancellationToken = default);
+    public Task<IReadOnlyList<PetDto>> PetsByVeterinarianAsync(int id, CancellationToken cancellationToken = default);
     /// <summary>
     /// Возвращает записи на приём к указанному ветеринару.
     /// </summary>
-    Task<IReadOnlyList<AppointmentDto>> AppointmentsByVeterinarianAsync(int id, CancellationToken cancellationToken = default);
+    public Task<IReadOnlyList<AppointmentDto>> AppointmentsByVeterinarianAsync(int id, CancellationToken cancellationToken = default);
 }

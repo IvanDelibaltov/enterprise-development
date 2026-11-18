@@ -1,8 +1,14 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using Microsoft.Extensions.DependencyInjection;
 using VeterinaryClinic.Domain.Repositories;
 using VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Application.Services;
-using VeterinaryClinic.Infrastructure;
+using VeterinaryClinic.Tests.TestDoubles;
 
 namespace VeterinaryClinic.Tests;
 
@@ -14,14 +20,14 @@ public class ClinicApplicationTests
     private static async Task<ServiceProvider> CreateProviderAsync()
     {
         var services = new ServiceCollection();
-        services.AddClinicRepositories();
+        services.AddTestRepositories();
         services.AddScoped<PetService>();
         services.AddScoped<OwnerService>();
         services.AddScoped<BreedService>();
         services.AddScoped<AppointmentService>();
         services.AddScoped<VeterinarianService>();
         var provider = services.BuildServiceProvider();
-        await ClinicSeedFactory.SeedClinicTestDataAsync(provider);
+        await ClinicTestSeed.SeedClinicTestDataAsync(provider);
         return provider;
     }
 

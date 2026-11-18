@@ -3,7 +3,7 @@ namespace VeterinaryClinic.Domain.Models;
 /// <summary>
 /// Запись питомца на приём
 /// </summary>
-public class Appointment
+public class Appointment : IEntity
 {
     /// <summary>
     /// Идентификатор приёма

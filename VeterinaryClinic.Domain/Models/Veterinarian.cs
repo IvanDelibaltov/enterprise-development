@@ -3,7 +3,7 @@ namespace VeterinaryClinic.Domain.Models;
 /// <summary>
 /// Ветеринар клиники
 /// </summary>
-public class Veterinarian : Person
+public class Veterinarian : Person, IEntity
 {
     /// <summary>
     /// Идентификатор ветеринара

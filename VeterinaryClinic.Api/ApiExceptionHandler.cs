@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using Microsoft.AspNetCore.Diagnostics;
 
 namespace VeterinaryClinic.Api;
@@ -18,11 +24,11 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
             InvalidOperationException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError
         };
-        if (status == 500) logger.LogError(exception, "Unhandled API error");
-        else logger.LogWarning(exception, "API request rejected with status {Status}", status);
+        if (status == 500) logger.LogError(exception, "Необработанная ошибка API");
+        else logger.LogWarning(exception, "Запрос отклонён с кодом {Status}", status);
         context.Response.StatusCode = status;
         await Results.Problem(statusCode: status, title: status == 500
-            ? "Internal server error" : exception.Message).ExecuteAsync(context);
+            ? "Внутренняя ошибка сервера" : exception.Message).ExecuteAsync(context);
         return true;
     }
 }

@@ -6,5 +6,6 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12"><PrivateAssets>all</PrivateAssets></PackageReference>
     <ProjectReference Include="..\VeterinaryClinic.Domain\VeterinaryClinic.Domain.csproj" />
+    <ProjectReference Include="..\VeterinaryClinic.Application\VeterinaryClinic.Application.csproj" />
   </ItemGroup>
 </Project>

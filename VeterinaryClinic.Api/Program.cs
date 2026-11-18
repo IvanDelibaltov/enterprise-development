@@ -1,8 +1,13 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
 using VeterinaryClinic.Application.Services;
 using VeterinaryClinic.Api;
-using VeterinaryClinic.Infrastructure;
 using VeterinaryClinic.Infrastructure.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +18,8 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi();
 var connectionString = builder.Configuration.GetConnectionString("clinicdb");
 if (string.IsNullOrWhiteSpace(connectionString))
-    builder.Services.AddClinicRepositories();
-else
-    builder.Services.AddClinicPostgreSql(connectionString);
+    throw new InvalidOperationException("Не задана строка подключения ConnectionStrings:clinicdb");
+builder.Services.AddClinicPostgreSql(connectionString);
 builder.Services.AddScoped<IBreedService, BreedService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
 builder.Services.AddScoped<IOwnerService, OwnerService>();
@@ -26,26 +30,12 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 var app = builder.Build();
-if (string.IsNullOrWhiteSpace(connectionString))
+using (var scope = app.Services.CreateScope())
 {
-    await ClinicSeedFactory.SeedClinicTestDataAsync(app.Services);
-}
-else
-{
-    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ClinicDbContext>();
     await db.Database.MigrateAsync();
 }
 app.UseExceptionHandler();
-app.Use(async (context, next) =>
-{
-    var logger = context.RequestServices.GetRequiredService<ILoggerFactory>()
-        .CreateLogger("VeterinaryClinic.Api.Requests");
-    logger.LogInformation("Запрос {Method} {Path}", context.Request.Method, context.Request.Path);
-    await next(context);
-    logger.LogInformation("Ответ {Method} {Path}: {StatusCode}",
-        context.Request.Method, context.Request.Path, context.Response.StatusCode);
-});
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

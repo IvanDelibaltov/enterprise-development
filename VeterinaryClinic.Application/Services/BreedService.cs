@@ -1,3 +1,9 @@
+using VeterinaryClinic.Application.Contracts.Appointments;
+using VeterinaryClinic.Application.Contracts.Breeds;
+using VeterinaryClinic.Application.Contracts.Owners;
+using VeterinaryClinic.Application.Contracts.Pets;
+using VeterinaryClinic.Application.Contracts.Specializations;
+using VeterinaryClinic.Application.Contracts.Veterinarians;
 using VeterinaryClinic.Domain.Models;
 using VeterinaryClinic.Domain.Repositories;
 
@@ -11,7 +17,7 @@ public sealed class BreedService(IRepository<Breed> breeds, IRepository<Pet> pet
     private static void Validate(SaveBreedRequest x)
     {
         if (string.IsNullOrWhiteSpace(x.Name) || !Enum.IsDefined(x.AnimalType))
-            throw new ArgumentException("Invalid breed");
+            throw new ArgumentException("Некорректные данные породы");
     }
 
     public async Task<IReadOnlyList<BreedDto>> BreedsAsync(CancellationToken cancellationToken = default) => (await breeds.GetAllAsync(cancellationToken)).Select(DtoMapper.Map).ToArray();
@@ -22,7 +28,7 @@ public sealed class BreedService(IRepository<Breed> breeds, IRepository<Pet> pet
     {
 
         Validate(x);
-        return DtoMapper.Map((await breeds.CreateAsync(id => new Breed { Id = id, Name = x.Name.Trim(), AnimalType = x.AnimalType }, cancellationToken)));
+        return DtoMapper.Map((await breeds.CreateAsync(new Breed { Name = x.Name.Trim(), AnimalType = x.AnimalType }, cancellationToken)));
     }
 
 
@@ -30,9 +36,9 @@ public sealed class BreedService(IRepository<Breed> breeds, IRepository<Pet> pet
     {
 
         Validate(x);
-        var current = (await breeds.GetAsync(id, cancellationToken)) ?? throw new KeyNotFoundException($"Breed {id} not found");
+        var current = (await breeds.GetAsync(id, cancellationToken)) ?? throw new KeyNotFoundException($"Порода {id} не найдена");
         if (current.AnimalType != x.AnimalType && (await pets.AnyAsync(p => p.Breed.Id == id, cancellationToken)))
-            throw new InvalidOperationException("Cannot change species of a breed used by pets");
+            throw new InvalidOperationException("Нельзя изменить вид породы, к которой привязаны питомцы");
         return DtoMapper.Map((await breeds.UpdateAsync(id, b => { b.Name = x.Name.Trim(); b.AnimalType = x.AnimalType; }, cancellationToken)));
     }
 
@@ -40,7 +46,7 @@ public sealed class BreedService(IRepository<Breed> breeds, IRepository<Pet> pet
     public async Task DeleteBreedAsync(int id, CancellationToken cancellationToken = default)
     {
 
-        if ((await pets.AnyAsync(p => p.Breed.Id == id, cancellationToken))) throw new InvalidOperationException("Breed is in use");
+        if ((await pets.AnyAsync(p => p.Breed.Id == id, cancellationToken))) throw new InvalidOperationException("Порода используется");
         await breeds.RemoveAsync(id, cancellationToken);
     }
 
@@ -48,7 +54,7 @@ public sealed class BreedService(IRepository<Breed> breeds, IRepository<Pet> pet
     public async Task<int> RepeatedAppointmentsAsync(int breedId, CancellationToken cancellationToken = default)
     {
 
-        if ((await breeds.GetAsync(breedId, cancellationToken)) is null) throw new KeyNotFoundException($"Breed {breedId} not found");
+        if ((await breeds.GetAsync(breedId, cancellationToken)) is null) throw new KeyNotFoundException($"Порода {breedId} не найдена");
         return (await appointments.CountAsync(a => a.IsRepeated && a.Pet.Breed.Id == breedId, cancellationToken));
     }
 
@@ -56,7 +62,7 @@ public sealed class BreedService(IRepository<Breed> breeds, IRepository<Pet> pet
     public async Task<IReadOnlyList<PetDto>> PetsByBreedAsync(int id, CancellationToken cancellationToken = default)
     {
 
-        if ((await breeds.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Breed {id} not found");
+        if ((await breeds.GetAsync(id, cancellationToken)) is null) throw new KeyNotFoundException($"Порода {id} не найдена");
         return (await pets.FindAsync(p => p.Breed.Id == id, cancellationToken)).Select(DtoMapper.Map).ToArray();
     }
 }

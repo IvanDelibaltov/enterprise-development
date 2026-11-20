@@ -1,10 +1,6 @@
-using VeterinaryClinic.Application.Contracts.Appointments;
+﻿using Microsoft.AspNetCore.Mvc;
 using VeterinaryClinic.Application.Contracts.Breeds;
-using VeterinaryClinic.Application.Contracts.Owners;
 using VeterinaryClinic.Application.Contracts.Pets;
-using VeterinaryClinic.Application.Contracts.Specializations;
-using VeterinaryClinic.Application.Contracts.Veterinarians;
-using Microsoft.AspNetCore.Mvc;
 
 namespace VeterinaryClinic.Api.Controllers;
 
@@ -13,7 +9,9 @@ namespace VeterinaryClinic.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/breeds")]
-public sealed class BreedController(IBreedService service) : ControllerBase
+public sealed class BreedController(
+    IBreedService service,
+    ILogger<BreedController> logger) : ControllerBase
 {
     /// <summary>
     /// Получить все породы
@@ -21,7 +19,15 @@ public sealed class BreedController(IBreedService service) : ControllerBase
     [HttpGet]
     [EndpointSummary("Get all breeds")]
     [ProducesResponseType(typeof(IReadOnlyList<BreedDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<BreedDto>>> GetAll() => Ok((await service.BreedsAsync(HttpContext.RequestAborted)));
+    public async Task<ActionResult<IReadOnlyList<BreedDto>>> GetAll()
+    {
+        logger.LogInformation("Получение списка пород");
+
+        var result = await service.BreedsAsync(HttpContext.RequestAborted);
+
+        logger.LogInformation("Получено пород: {Count}", result.Count);
+        return Ok(result);
+    }
 
     /// <summary>
     /// Получить породу по идентификатору
@@ -33,8 +39,17 @@ public sealed class BreedController(IBreedService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<BreedDto>> Get(int id)
     {
-        var entity = (await service.GetAsync(id, HttpContext.RequestAborted));
-        return entity is null ? NotFound() : Ok(entity);
+        logger.LogInformation("Получение породы с Id {Id}", id);
+
+        var result = await service.GetAsync(id, HttpContext.RequestAborted);
+
+        if (result is null)
+        {
+            logger.LogWarning("Порода с Id {Id} не найдена", id);
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -47,8 +62,20 @@ public sealed class BreedController(IBreedService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<BreedDto>> Create(SaveBreedRequest request)
     {
-        var entity = (await service.CreateAsync(request, HttpContext.RequestAborted));
-        return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
+        logger.LogInformation("Создание новой породы");
+
+        var result = await service.CreateAsync(
+            request,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Порода с Id {Id} создана",
+            result.Id);
+
+        return CreatedAtAction(
+            nameof(Get),
+            new { id = result.Id },
+            result);
     }
 
     /// <summary>
@@ -61,7 +88,25 @@ public sealed class BreedController(IBreedService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BreedDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<BreedDto>> Update(int id, SaveBreedRequest request) => Ok((await service.UpdateAsync(id, request, HttpContext.RequestAborted)));
+    public async Task<ActionResult<BreedDto>> Update(
+        int id,
+        SaveBreedRequest request)
+    {
+        logger.LogInformation(
+            "Обновление породы с Id {Id}",
+            id);
+
+        var result = await service.UpdateAsync(
+            id,
+            request,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Порода с Id {Id} обновлена",
+            id);
+
+        return Ok(result);
+    }
 
     /// <summary>
     /// Удалить породу
@@ -73,24 +118,69 @@ public sealed class BreedController(IBreedService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id)
     {
-        await service.DeleteBreedAsync(id, HttpContext.RequestAborted);
+        logger.LogInformation(
+            "Удаление породы с Id {Id}",
+            id);
+
+        await service.DeleteBreedAsync(
+            id,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Порода с Id {Id} удалена",
+            id);
+
         return NoContent();
     }
 
     /// <summary>
     /// Посчитать повторные приёмы по породе
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
+    /// <param name="id">Идентификатор породы</param>
     [HttpGet("{id:int}/repeated-appointments/count")]
     [EndpointSummary("Count repeated appointments by breed")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
-    public async Task<ActionResult<int>> RepeatedCount(int id) => Ok((await service.RepeatedAppointmentsAsync(id, HttpContext.RequestAborted)));
+    public async Task<ActionResult<int>> RepeatedCount(int id)
+    {
+        logger.LogInformation(
+            "Получение количества повторных приёмов для породы с Id {Id}",
+            id);
+
+        var result = await service.RepeatedAppointmentsAsync(
+            id,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Для породы с Id {Id} найдено повторных приёмов: {Count}",
+            id,
+            result);
+
+        return Ok(result);
+    }
 
     /// <summary>
     /// Получить питомцев по породе
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
+    /// <param name="id">Идентификатор породы</param>
     [HttpGet("{id:int}/pets")]
     [EndpointSummary("Get pets by breed")]
-    public async Task<ActionResult<IReadOnlyList<PetDto>>> GetPets(int id) => Ok((await service.PetsByBreedAsync(id, HttpContext.RequestAborted)));
+    [ProducesResponseType(typeof(IReadOnlyList<PetDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<PetDto>>> GetPets(int id)
+    {
+        logger.LogInformation(
+            "Получение питомцев породы с Id {Id}",
+            id);
+
+        var result = await service.PetsByBreedAsync(
+            id,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Для породы с Id {Id} найдено питомцев: {Count}",
+            id,
+            result.Count);
+
+        return Ok(result);
+    }
 }

@@ -1,19 +1,17 @@
-using VeterinaryClinic.Application.Contracts.Appointments;
-using VeterinaryClinic.Application.Contracts.Breeds;
-using VeterinaryClinic.Application.Contracts.Owners;
-using VeterinaryClinic.Application.Contracts.Pets;
+﻿using Microsoft.AspNetCore.Mvc;
 using VeterinaryClinic.Application.Contracts.Specializations;
 using VeterinaryClinic.Application.Contracts.Veterinarians;
-using Microsoft.AspNetCore.Mvc;
 
 namespace VeterinaryClinic.Api.Controllers;
 
 /// <summary>
-/// Контроллер для работы с специализациями
+/// Контроллер для работы со специализациями
 /// </summary>
 [ApiController]
 [Route("api/specializations")]
-public sealed class SpecializationController(ISpecializationService service) : ControllerBase
+public sealed class SpecializationController(
+    ISpecializationService service,
+    ILogger<SpecializationController> logger) : ControllerBase
 {
     /// <summary>
     /// Получить все специализации
@@ -21,7 +19,19 @@ public sealed class SpecializationController(ISpecializationService service) : C
     [HttpGet]
     [EndpointSummary("Get all specializations")]
     [ProducesResponseType(typeof(IReadOnlyList<SpecializationDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<SpecializationDto>>> GetAll() => Ok((await service.SpecializationsAsync(HttpContext.RequestAborted)));
+    public async Task<ActionResult<IReadOnlyList<SpecializationDto>>> GetAll()
+    {
+        logger.LogInformation("Получение списка специализаций");
+
+        var result = await service.SpecializationsAsync(
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Получено специализаций: {Count}",
+            result.Count);
+
+        return Ok(result);
+    }
 
     /// <summary>
     /// Получить специализацию по идентификатору
@@ -33,8 +43,24 @@ public sealed class SpecializationController(ISpecializationService service) : C
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SpecializationDto>> Get(int id)
     {
-        var entity = (await service.GetAsync(id, HttpContext.RequestAborted));
-        return entity is null ? NotFound() : Ok(entity);
+        logger.LogInformation(
+            "Получение специализации с Id {Id}",
+            id);
+
+        var result = await service.GetAsync(
+            id,
+            HttpContext.RequestAborted);
+
+        if (result is null)
+        {
+            logger.LogWarning(
+                "Специализация с Id {Id} не найдена",
+                id);
+
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -45,10 +71,23 @@ public sealed class SpecializationController(ISpecializationService service) : C
     [EndpointSummary("Create specialization")]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<SpecializationDto>> Create(SaveSpecializationRequest request)
+    public async Task<ActionResult<SpecializationDto>> Create(
+        SaveSpecializationRequest request)
     {
-        var entity = (await service.CreateAsync(request, HttpContext.RequestAborted));
-        return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
+        logger.LogInformation("Создание новой специализации");
+
+        var result = await service.CreateAsync(
+            request,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Специализация с Id {Id} создана",
+            result.Id);
+
+        return CreatedAtAction(
+            nameof(Get),
+            new { id = result.Id },
+            result);
     }
 
     /// <summary>
@@ -61,8 +100,25 @@ public sealed class SpecializationController(ISpecializationService service) : C
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<SpecializationDto>> Update(int id, SaveSpecializationRequest request)
-        => Ok((await service.UpdateAsync(id, request, HttpContext.RequestAborted)));
+    public async Task<ActionResult<SpecializationDto>> Update(
+        int id,
+        SaveSpecializationRequest request)
+    {
+        logger.LogInformation(
+            "Обновление специализации с Id {Id}",
+            id);
+
+        var result = await service.UpdateAsync(
+            id,
+            request,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Специализация с Id {Id} обновлена",
+            id);
+
+        return Ok(result);
+    }
 
     /// <summary>
     /// Удалить специализацию
@@ -74,16 +130,44 @@ public sealed class SpecializationController(ISpecializationService service) : C
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id)
     {
-        await service.DeleteSpecializationAsync(id, HttpContext.RequestAborted);
+        logger.LogInformation(
+            "Удаление специализации с Id {Id}",
+            id);
+
+        await service.DeleteSpecializationAsync(
+            id,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Специализация с Id {Id} удалена",
+            id);
+
         return NoContent();
     }
 
     /// <summary>
     /// Получить ветеринаров по специализации
     /// </summary>
-    /// <param name="id">Идентификатор записи</param>
+    /// <param name="id">Идентификатор специализации</param>
     [HttpGet("{id:int}/veterinarians")]
     [EndpointSummary("Get veterinarians by specialization")]
+    [ProducesResponseType(typeof(IReadOnlyList<VeterinarianDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IReadOnlyList<VeterinarianDto>>> GetVeterinarians(int id)
-        => Ok((await service.VeterinariansBySpecializationAsync(id, HttpContext.RequestAborted)));
+    {
+        logger.LogInformation(
+            "Получение ветеринаров специализации с Id {Id}",
+            id);
+
+        var result = await service.VeterinariansBySpecializationAsync(
+            id,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Для специализации с Id {Id} найдено ветеринаров: {Count}",
+            id,
+            result.Count);
+
+        return Ok(result);
+    }
 }

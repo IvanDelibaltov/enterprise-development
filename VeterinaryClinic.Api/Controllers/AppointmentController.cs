@@ -1,10 +1,5 @@
+﻿using Microsoft.AspNetCore.Mvc;
 using VeterinaryClinic.Application.Contracts.Appointments;
-using VeterinaryClinic.Application.Contracts.Breeds;
-using VeterinaryClinic.Application.Contracts.Owners;
-using VeterinaryClinic.Application.Contracts.Pets;
-using VeterinaryClinic.Application.Contracts.Specializations;
-using VeterinaryClinic.Application.Contracts.Veterinarians;
-using Microsoft.AspNetCore.Mvc;
 
 namespace VeterinaryClinic.Api.Controllers;
 
@@ -13,7 +8,9 @@ namespace VeterinaryClinic.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/appointments")]
-public sealed class AppointmentController(IAppointmentService service) : ControllerBase
+public sealed class AppointmentController(
+    IAppointmentService service,
+    ILogger<AppointmentController> logger) : ControllerBase
 {
     /// <summary>
     /// Получить все приёмы
@@ -21,7 +18,15 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [HttpGet]
     [EndpointSummary("Get all appointments")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> GetAll() => Ok((await service.AppointmentsAsync(HttpContext.RequestAborted)));
+    public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> GetAll()
+    {
+        logger.LogInformation("Получение списка приёмов");
+
+        var result = await service.AppointmentsAsync(HttpContext.RequestAborted);
+
+        logger.LogInformation("Получено приёмов: {Count}", result.Count);
+        return Ok(result);
+    }
 
     /// <summary>
     /// Получить приём по идентификатору
@@ -33,8 +38,16 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AppointmentDto>> Get(int id)
     {
-        var entity = (await service.GetAsync(id, HttpContext.RequestAborted));
-        return entity is null ? NotFound() : Ok(entity);
+        logger.LogInformation("Получение приёма с Id {Id}", id);
+
+        var result = await service.GetAsync(id, HttpContext.RequestAborted);
+        if (result is null)
+        {
+            logger.LogWarning("Приём с Id {Id} не найден", id);
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -47,8 +60,12 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AppointmentDto>> Create(SaveAppointmentRequest request)
     {
-        var entity = (await service.CreateAsync(request, HttpContext.RequestAborted));
-        return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity);
+        logger.LogInformation("Создание нового приёма");
+
+        var result = await service.CreateAsync(request, HttpContext.RequestAborted);
+
+        logger.LogInformation("Приём с Id {Id} создан", result.Id);
+        return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
     }
 
     /// <summary>
@@ -62,7 +79,14 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AppointmentDto>> Update(int id, SaveAppointmentRequest request)
-        => Ok((await service.UpdateAsync(id, request, HttpContext.RequestAborted)));
+    {
+        logger.LogInformation("Обновление приёма с Id {Id}", id);
+
+        var result = await service.UpdateAsync(id, request, HttpContext.RequestAborted);
+
+        logger.LogInformation("Приём с Id {Id} обновлён", id);
+        return Ok(result);
+    }
 
     /// <summary>
     /// Удалить приём
@@ -74,7 +98,11 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id)
     {
+        logger.LogInformation("Удаление приёма с Id {Id}", id);
+
         await service.DeleteAppointmentAsync(id, HttpContext.RequestAborted);
+
+        logger.LogInformation("Приём с Id {Id} удалён", id);
         return NoContent();
     }
 
@@ -85,11 +113,29 @@ public sealed class AppointmentController(IAppointmentService service) : Control
     [HttpGet("current-month")]
     [EndpointSummary("Get appointments for the current month")]
     [ProducesResponseType(typeof(IReadOnlyList<AppointmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> CurrentMonth([FromQuery] int roomNumber)
     {
         if (roomNumber <= 0)
+        {
+            logger.LogWarning("Передан некорректный номер кабинета {RoomNumber}", roomNumber);
             return BadRequest();
+        }
 
-        return Ok((await service.AppointmentsThisMonthAsync(roomNumber, DateTime.Today, HttpContext.RequestAborted)));
+        logger.LogInformation(
+            "Получение приёмов за текущий месяц для кабинета {RoomNumber}",
+            roomNumber);
+
+        var result = await service.AppointmentsThisMonthAsync(
+            roomNumber,
+            DateTime.Today,
+            HttpContext.RequestAborted);
+
+        logger.LogInformation(
+            "Для кабинета {RoomNumber} найдено приёмов: {Count}",
+            roomNumber,
+            result.Count);
+
+        return Ok(result);
     }
 }
